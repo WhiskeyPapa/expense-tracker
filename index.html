@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Expenses">
 <title>Expenses</title>
 
@@ -407,7 +407,7 @@
 <!-- ══════════ TRANSACTIONS ══════════ -->
 <div class="screen" id="s-transactions">
   <div class="tx-sticky" id="tx-sticky-bar">
-    <div id="sat-spacer" style="padding-top: calc(8px + env(safe-area-inset-top, 0px));"></div>
+    <div id="sat-spacer" style="padding-top: 8px;"></div>
     <div class="chips" id="tx-chips"></div>
     <div style="margin:0 18px 12px;background:#1c1c28;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
       <i class="ti ti-search" style="font-size:17px;color:#7a7a9a;flex-shrink:0;" aria-hidden="true"></i>
@@ -1068,7 +1068,7 @@ window.switchTab = (id, btn) => {
     document.getElementById('s-transactions').scrollTop = 0;
     // apply safe area padding only in PWA standalone mode
     const isPWA = window.navigator.standalone === true;
-    const satPx = isPWA ? (window._sat || 0) : 0;
+    const satPx = isPWA ? 62 : 0;
     const satSpacer = document.getElementById('sat-spacer');
     if (satSpacer) satSpacer.style.paddingTop = (satPx + 8) + 'px';
     // update month sticky tops after layout is painted
@@ -1105,65 +1105,6 @@ window.switchTab = (id, btn) => {
   window._sat = sat;
 })();
 
-// ── DEBUG OVERLAY ──
-(function() {
-  const dbg = document.createElement('div');
-  dbg.id = 'debug-overlay';
-  dbg.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.92);
-    color: #4cd97b;
-    font-size: 13px;
-    font-family: monospace;
-    padding: 16px 20px;
-    border-radius: 14px;
-    z-index: 99999;
-    line-height: 1.8;
-    border: 1px solid #4cd97b;
-    min-width: 260px;
-    text-align: left;
-  `;
-
-  function update() {
-    const isPWA = window.navigator.standalone === true;
-    const innerH = window.innerHeight;
-    const innerW = window.innerWidth;
-    const screenH = window.screen.height;
-
-    // measure safe area top
-    const div = document.createElement('div');
-    div.style.cssText = 'position:fixed;top:env(safe-area-inset-top,0px);left:0;width:1px;height:1px;pointer-events:none;visibility:hidden;';
-    document.body.appendChild(div);
-    const satTop = div.getBoundingClientRect().top;
-    document.body.removeChild(div);
-
-    // measure safe area bottom
-    const div2 = document.createElement('div');
-    div2.style.cssText = 'position:fixed;bottom:env(safe-area-inset-bottom,0px);left:0;width:1px;height:1px;pointer-events:none;visibility:hidden;';
-    document.body.appendChild(div2);
-    const satBottom = window.innerHeight - div2.getBoundingClientRect().bottom;
-    document.body.removeChild(div2);
-
-    dbg.innerHTML = `
-      <b>Debug Info</b><br>
-      standalone: <b>${isPWA}</b><br>
-      body.pwa: <b>${document.body.classList.contains('pwa')}</b><br>
-      safe-area-top: <b>${satTop}px</b><br>
-      safe-area-bottom: <b>${satBottom.toFixed(1)}px</b><br>
-      innerH: <b>${innerH}px</b><br>
-      innerW: <b>${innerW}px</b><br>
-      screenH: <b>${screenH}px</b><br>
-      <br>
-      <span style="color:#ff6b6b;cursor:pointer;" onclick="document.getElementById('debug-overlay').remove()">✕ close</span>
-    `;
-  }
-
-  update();
-  document.body.appendChild(dbg);
-})();
 
 // ── TOAST ──
 window.toast = (msg) => {
