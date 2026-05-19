@@ -709,7 +709,7 @@ function closeAllSwipes(except) {
 
 function attachSwipe(el) {
   let startX = 0, startY = 0, isDragging = false, currentX = 0;
-  const THRESHOLD = 36;
+  const THRESHOLD = 50;
   const ZONE = 72;
 
   el.addEventListener('touchstart', e => {
