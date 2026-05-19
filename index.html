@@ -113,6 +113,7 @@
     max-width: 430px;
     margin: 0 auto;
   }
+  }
   /* chips+search bar sticky at top of scroll container */
   .tx-sticky {
     position: sticky;
@@ -158,17 +159,17 @@
   .amount-display .num { font-size: 40px; font-weight: 500; letter-spacing: -1px; }
 
   .cat-grid {
-    display: grid; grid-template-columns: repeat(5,1fr);
+    display: grid; grid-template-columns: repeat(4,1fr);
     gap: 8px; padding: 0 18px 12px;
   }
   .cat-btn {
-    background: var(--bg3); border-radius: 12px;
-    padding: 10px 2px; display: flex; flex-direction: column;
+    background: var(--bg3); border-radius: 14px;
+    padding: 12px 4px; display: flex; flex-direction: column;
     align-items: center; gap: 4px; font-size: 11px;
     color: var(--muted); border: 1.5px solid transparent;
     cursor: pointer; transition: none;
   }
-  .cat-btn i { font-size: 17px; }
+  .cat-btn i { font-size: 20px; }
   .cat-btn.sel { border-color: currentColor; }
 
   .note-field {
@@ -333,6 +334,50 @@
     animation: fadeup 0.2s ease;
   }
   @keyframes fadeup { from { opacity:0; transform: translateX(-50%) translateY(8px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+  /* ── DATE PICKER ── */
+  .date-field {
+    margin: 0 18px 10px;
+    background: var(--bg3);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+  }
+  .date-field.open { border-color: var(--accent); }
+  .date-field-lbl { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .date-field-val { font-size: 13px; font-weight: 500; color: var(--text); }
+
+  .cal-sheet {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: var(--bg2);
+    border-radius: 20px 20px 0 0;
+    padding: 16px 18px 32px;
+    z-index: 200;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
+  }
+  .cal-sheet.visible { display: block; }
+  .cal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 14px; }
+  .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .cal-nav-btn { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px 8px; }
+  .cal-nav span { font-size: 14px; font-weight: 500; color: var(--text); }
+  .cal-day-hdrs { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 4px; }
+  .cal-day-hdr { text-align: center; font-size: 10px; color: var(--muted); padding: 2px 0; }
+  .cal-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+  .cal-day { text-align: center; font-size: 12px; padding: 8px 2px; border-radius: 8px; color: var(--muted); cursor: default; }
+  .cal-day.past { color: #ccc; cursor: pointer; }
+  .cal-day.past:active { background: rgba(72,72,238,0.2); }
+  .cal-day.today { color: var(--accent); font-weight: 600; cursor: pointer; }
+  .cal-day.sel { background: var(--accent); color: #fff; font-weight: 600; border-radius: 50%; cursor: pointer; }
+  .cal-day.future { color: #333; }
+  .cal-confirm { margin-top: 14px; background: var(--accent); border: none; border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 500; color: #fff; width: 100%; cursor: pointer; }
+  .cal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; }
+  .cal-backdrop.visible { display: block; }
 </style>
 </head>
 <body>
@@ -351,7 +396,11 @@
 
   <div class="cat-grid" id="cat-grid"></div>
 
-  <input class="note-field" id="note-input" type="text" placeholder="Note (optional)" maxlength="60">
+  <div class="date-field" id="date-field" onclick="openCal()">
+  <div class="date-field-lbl"><i class="ti ti-calendar" style="font-size:14px;"></i>Date</div>
+  <div class="date-field-val" id="date-field-val">Today</div>
+</div>
+<input class="note-field" id="note-input" type="text" placeholder="Note (optional)" maxlength="60">
 
   <div class="numpad">
     <button class="np-btn" onclick="np('1')">1</button>
@@ -368,7 +417,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">Add expense</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -465,7 +514,6 @@ const CATS = [
   { id:'baby',      label:'Baby',      icon:'ti-mood-kid',              color:'#fb923c' },
   { id:'home',      label:'Home',      icon:'ti-home',                  color:'#2dd4bf' },
   { id:'bills',     label:'Bills',     icon:'ti-file-invoice',          color:'#4a9eff' },
-  { id:'pet',       label:'Pet',       icon:'ti-cat',                   color:'#f0abfc' },
   { id:'care',      label:'Care',      icon:'ti-heart-rate-monitor',    color:'#ff6b6b' },
   { id:'fun',       label:'Fun',       icon:'ti-device-tv',             color:'#facc15' },
   { id:'transport', label:'Transport', icon:'ti-bus',                   color:'#c084fc' },
@@ -476,6 +524,7 @@ const CAT_MAP = Object.fromEntries(CATS.map(c=>[c.id,c]));
 // ── STATE ──
 let expenses   = [];
 let amtStr     = '';
+let selectedDate = new Date();
 let selCat     = null;
 let txFilter   = 'all';
 let txSearch   = '';
@@ -666,7 +715,7 @@ window.addExpense = async () => {
   const note = document.getElementById('note-input').value.trim();
 
   // capture values then reset UI immediately before await
-  const payload = { amount: amt, category: selCat, note, dateMs: Date.now() };
+  const payload = { amount: amt, category: selCat, note, dateMs: selectedDate.getTime() };
   resetAddForm();
 
   try {
@@ -709,7 +758,7 @@ function closeAllSwipes(except) {
 
 function attachSwipe(el) {
   let startX = 0, startY = 0, isDragging = false, currentX = 0;
-  const THRESHOLD = 50;
+  const THRESHOLD = 36;
   const ZONE = 72;
 
   el.addEventListener('touchstart', e => {
@@ -725,11 +774,8 @@ function attachSwipe(el) {
   el.addEventListener('touchmove', e => {
     const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
-    // require horizontal movement to be at least 2x the vertical movement
-    // and minimum 10px horizontal before triggering swipe
-    if (!isDragging && (Math.abs(dy) > Math.abs(dx) * 0.5 || Math.abs(dx) < 10)) return;
+    if (!isDragging && Math.abs(dy) > Math.abs(dx) + 5) return;
     isDragging = true;
-    e.preventDefault();
     const newX = Math.min(ZONE, Math.max(-ZONE, currentX + dx));
     el.style.transform = 'translateX(' + newX + 'px)';
   }, { passive: true });
@@ -889,8 +935,6 @@ function renderTx(highlightId) {
       // Step 1: remove the del-btn from DOM entirely so it cannot show
       const delBtn = wrap.querySelector('.del-btn');
       if (delBtn) delBtn.remove();
-      const editBtn = wrap.querySelector('.edit-action-btn');
-      if (editBtn) editBtn.remove();
 
       // Step 2: force row to position 0 with no transition
       row.classList.remove('swiped');
@@ -1110,6 +1154,78 @@ if (satSpacer) satSpacer.style.paddingTop = '0px';
 })();
 
 
+// ── DATE PICKER ──
+let calViewDate = new Date();
+let calTempDate = new Date();
+
+function formatDate(d) {
+  const today = new Date();
+  if (d.toDateString() === today.toDateString()) return 'Today';
+  return d.toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function updateDateField() {
+  document.getElementById('date-field-val').textContent = formatDate(selectedDate);
+}
+
+window.openCal = () => {
+  calViewDate = new Date(selectedDate);
+  calTempDate = new Date(selectedDate);
+  renderCal();
+  document.getElementById('cal-sheet').classList.add('visible');
+  document.getElementById('cal-backdrop').classList.add('visible');
+  document.getElementById('date-field').classList.add('open');
+};
+
+window.closeCal = () => {
+  document.getElementById('cal-sheet').classList.remove('visible');
+  document.getElementById('cal-backdrop').classList.remove('visible');
+  document.getElementById('date-field').classList.remove('open');
+};
+
+window.calChangeMonth = (dir) => {
+  calViewDate.setMonth(calViewDate.getMonth() + dir);
+  renderCal();
+};
+
+window.confirmCal = () => {
+  selectedDate = new Date(calTempDate);
+  updateDateField();
+  closeCal();
+};
+
+function renderCal() {
+  const y = calViewDate.getFullYear();
+  const m = calViewDate.getMonth();
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-lbl').textContent = MONTHS[m] + ' ' + y;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(y, m, d); date.setHours(0,0,0,0);
+    const isSel = date.toDateString() === calTempDate.toDateString();
+    const isToday = date.toDateString() === today.toDateString();
+    const isPast = date <= today;
+    let cls = 'cal-day';
+    if (isSel) cls += ' sel';
+    else if (isToday) cls += ' today';
+    else if (isPast) cls += ' past';
+    else cls += ' future';
+    const click = isPast ? 'onclick="selectCalDay(' + y + ',' + m + ',' + d + ')"' : '';
+    html += '<div class="' + cls + '" ' + click + '>' + d + '</div>';
+  }
+  document.getElementById('cal-days').innerHTML = html;
+  document.getElementById('cal-confirm').textContent = 'Confirm — ' + calTempDate.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
+}
+
+window.selectCalDay = (y, m, d) => {
+  calTempDate = new Date(y, m, d);
+  renderCal();
+};
+
 // ── TOAST ──
 window.toast = (msg) => {
   const t = document.createElement('div');
@@ -1118,5 +1234,22 @@ window.toast = (msg) => {
   setTimeout(()=>t.remove(), 1800);
 };
 </script>
+<div class="cal-backdrop" id="cal-backdrop" onclick="closeCal()"></div>
+<div class="cal-sheet" id="cal-sheet">
+  <div class="cal-handle"></div>
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="calChangeMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+    <span id="cal-month-lbl"></span>
+    <button class="cal-nav-btn" onclick="calChangeMonth(1)"><i class="ti ti-chevron-right"></i></button>
+  </div>
+  <div class="cal-day-hdrs">
+    <div class="cal-day-hdr">S</div><div class="cal-day-hdr">M</div>
+    <div class="cal-day-hdr">T</div><div class="cal-day-hdr">W</div>
+    <div class="cal-day-hdr">T</div><div class="cal-day-hdr">F</div>
+    <div class="cal-day-hdr">S</div>
+  </div>
+  <div class="cal-days" id="cal-days"></div>
+  <button class="cal-confirm" id="cal-confirm" onclick="confirmCal()">Confirm</button>
+</div>
 </body>
 </html>
