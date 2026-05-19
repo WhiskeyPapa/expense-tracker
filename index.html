@@ -407,7 +407,7 @@
 <!-- ══════════ TRANSACTIONS ══════════ -->
 <div class="screen" id="s-transactions">
   <div class="tx-sticky" id="tx-sticky-bar">
-    <div id="sat-spacer" style="padding-top: 8px;"></div>
+    <div id="sat-spacer" style="padding-top: 0px;"></div>
     <div class="chips" id="tx-chips"></div>
     <div style="margin:0 18px 12px;background:#1c1c28;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
       <i class="ti ti-search" style="font-size:17px;color:#7a7a9a;flex-shrink:0;" aria-hidden="true"></i>
@@ -1068,9 +1068,8 @@ window.switchTab = (id, btn) => {
     document.getElementById('s-transactions').scrollTop = 0;
     // apply safe area padding only in PWA standalone mode
     const isPWA = window.navigator.standalone === true;
-    const satPx = isPWA ? 62 : 0;
     const satSpacer = document.getElementById('sat-spacer');
-    if (satSpacer) satSpacer.style.paddingTop = (satPx + 8) + 'px';
+if (satSpacer) satSpacer.style.paddingTop = '0px';
     // update month sticky tops after layout is painted
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
