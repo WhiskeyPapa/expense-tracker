@@ -113,7 +113,6 @@
     max-width: 430px;
     margin: 0 auto;
   }
-  }
   /* chips+search bar sticky at top of scroll container */
   .tx-sticky {
     position: sticky;
@@ -159,17 +158,17 @@
   .amount-display .num { font-size: 40px; font-weight: 500; letter-spacing: -1px; }
 
   .cat-grid {
-    display: grid; grid-template-columns: repeat(4,1fr);
+    display: grid; grid-template-columns: repeat(5,1fr);
     gap: 8px; padding: 0 18px 12px;
   }
   .cat-btn {
-    background: var(--bg3); border-radius: 14px;
-    padding: 12px 4px; display: flex; flex-direction: column;
+    background: var(--bg3); border-radius: 12px;
+    padding: 10px 2px; display: flex; flex-direction: column;
     align-items: center; gap: 4px; font-size: 11px;
     color: var(--muted); border: 1.5px solid transparent;
     cursor: pointer; transition: none;
   }
-  .cat-btn i { font-size: 20px; }
+  .cat-btn i { font-size: 17px; }
   .cat-btn.sel { border-color: currentColor; }
 
   .note-field {
@@ -349,7 +348,6 @@
   .date-field.open { border-color: var(--accent); }
   .date-field-lbl { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
   .date-field-val { font-size: 13px; font-weight: 500; color: var(--text); }
-
   .cal-sheet {
     display: none;
     position: fixed;
@@ -417,7 +415,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">Add expense</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -514,11 +512,11 @@ const CATS = [
   { id:'baby',      label:'Baby',      icon:'ti-mood-kid',              color:'#fb923c' },
   { id:'home',      label:'Home',      icon:'ti-home',                  color:'#2dd4bf' },
   { id:'bills',     label:'Bills',     icon:'ti-file-invoice',          color:'#4a9eff' },
+  { id:'pet',       label:'Pet',       icon:'ti-cat',                   color:'#f0abfc' },
   { id:'care',      label:'Care',      icon:'ti-heart-rate-monitor',    color:'#ff6b6b' },
   { id:'fun',       label:'Fun',       icon:'ti-device-tv',             color:'#facc15' },
   { id:'transport', label:'Transport', icon:'ti-bus',                   color:'#c084fc' },
   { id:'others',    label:'Others',    icon:'ti-dots-circle-horizontal',color:'#888888' },
-  { id:'pet',       label:'Pet',       icon:'ti-cat',                   color:'#f0abfc' },
 ];
 const CAT_MAP = Object.fromEntries(CATS.map(c=>[c.id,c]));
 
@@ -775,12 +773,14 @@ function attachSwipe(el) {
   el.addEventListener('touchmove', e => {
     const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
+    // require horizontal movement to be at least 2x the vertical movement
+    // and minimum 10px horizontal before triggering swipe
     if (!isDragging && (Math.abs(dy) > Math.abs(dx) * 0.5 || Math.abs(dx) < 10)) return;
     isDragging = true;
     e.preventDefault();
     const newX = Math.min(ZONE, Math.max(-ZONE, currentX + dx));
     el.style.transform = 'translateX(' + newX + 'px)';
-  }, { passive: false });
+  }, { passive: true });
 
   el.addEventListener('touchend', e => {
     el.style.transition = 'transform 0.25s ease';
@@ -937,6 +937,8 @@ function renderTx(highlightId) {
       // Step 1: remove the del-btn from DOM entirely so it cannot show
       const delBtn = wrap.querySelector('.del-btn');
       if (delBtn) delBtn.remove();
+      const editBtn = wrap.querySelector('.edit-action-btn');
+      if (editBtn) editBtn.remove();
 
       // Step 2: force row to position 0 with no transition
       row.classList.remove('swiped');
