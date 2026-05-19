@@ -886,6 +886,8 @@ function renderTx(highlightId) {
       // Step 1: remove the del-btn from DOM entirely so it cannot show
       const delBtn = wrap.querySelector('.del-btn');
       if (delBtn) delBtn.remove();
+      const editBtn = wrap.querySelector('.edit-action-btn');
+      if (editBtn) editBtn.remove();
 
       // Step 2: force row to position 0 with no transition
       row.classList.remove('swiped');
