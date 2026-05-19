@@ -518,6 +518,7 @@ const CATS = [
   { id:'fun',       label:'Fun',       icon:'ti-device-tv',             color:'#facc15' },
   { id:'transport', label:'Transport', icon:'ti-bus',                   color:'#c084fc' },
   { id:'others',    label:'Others',    icon:'ti-dots-circle-horizontal',color:'#888888' },
+  { id:'pet',       label:'Pet',       icon:'ti-cat',                   color:'#f0abfc' },
 ];
 const CAT_MAP = Object.fromEntries(CATS.map(c=>[c.id,c]));
 
@@ -758,7 +759,7 @@ function closeAllSwipes(except) {
 
 function attachSwipe(el) {
   let startX = 0, startY = 0, isDragging = false, currentX = 0;
-  const THRESHOLD = 36;
+  const THRESHOLD = 50;
   const ZONE = 72;
 
   el.addEventListener('touchstart', e => {
@@ -774,11 +775,12 @@ function attachSwipe(el) {
   el.addEventListener('touchmove', e => {
     const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
-    if (!isDragging && Math.abs(dy) > Math.abs(dx) + 5) return;
+    if (!isDragging && (Math.abs(dy) > Math.abs(dx) * 0.5 || Math.abs(dx) < 10)) return;
     isDragging = true;
+    e.preventDefault();
     const newX = Math.min(ZONE, Math.max(-ZONE, currentX + dx));
     el.style.transform = 'translateX(' + newX + 'px)';
-  }, { passive: true });
+  }, { passive: false });
 
   el.addEventListener('touchend', e => {
     el.style.transition = 'transform 0.25s ease';
