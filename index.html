@@ -53,8 +53,9 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
   body.pwa #s-transactions.active {
-    bottom: calc(65px + env(safe-area-inset-bottom, 0px));
-  }
+  top: 62px;
+  bottom: calc(65px + 34px);
+}
   body.pwa .bnav {
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
@@ -1068,6 +1069,7 @@ window.switchTab = (id, btn) => {
     document.getElementById('s-transactions').scrollTop = 0;
     // apply safe area padding only in PWA standalone mode
     const isPWA = window.navigator.standalone === true;
+const satPx = isPWA ? 62 : 0;
 const satSpacer = document.getElementById('sat-spacer');
 if (satSpacer) satSpacer.style.paddingTop = '8px';
     // update month sticky tops after layout is painted
