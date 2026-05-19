@@ -1068,9 +1068,8 @@ window.switchTab = (id, btn) => {
     document.getElementById('s-transactions').scrollTop = 0;
     // apply safe area padding only in PWA standalone mode
     const isPWA = window.navigator.standalone === true;
-    const satPx = isPWA ? 62 : 0;
-    const satSpacer = document.getElementById('sat-spacer');
-    if (satSpacer) satSpacer.style.paddingTop = (satPx + 8) + 'px';
+const satSpacer = document.getElementById('sat-spacer');
+if (satSpacer) satSpacer.style.paddingTop = '8px';
     // update month sticky tops after layout is painted
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
