@@ -1229,6 +1229,18 @@ if (satSpacer) satSpacer.style.paddingTop = isPWA ? 'env(safe-area-inset-top, 62
   const sat = div.getBoundingClientRect().top;
   document.body.removeChild(div);
   window._sat = sat;
+
+  // fix nav bar shift when keyboard appears — iOS shifts the visual viewport
+  // upward when body is not scrollable, moving fixed elements above the keyboard.
+  // counteract by translating the nav down by the keyboard height.
+  if (window.visualViewport) {
+    const nav = document.querySelector('.bnav');
+    window.visualViewport.addEventListener('resize', () => {
+      if (!nav) return;
+      const keyboardHeight = window.innerHeight - window.visualViewport.height;
+      nav.style.transform = `translateX(-50%) translateY(${Math.max(0, keyboardHeight)}px)`;
+    });
+  }
 })();
 
 
