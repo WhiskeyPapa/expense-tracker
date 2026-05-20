@@ -46,8 +46,6 @@
   }
 
   /* ── PWA STANDALONE SAFE AREA ── */
-  /* applied via JS when window.navigator.standalone === true */
-  /* ── PWA STANDALONE: applied via body.pwa class added by JS ── */
   body.pwa {
     padding-top: 62px;
   }
@@ -61,13 +59,11 @@
     padding-top: env(safe-area-inset-top, 62px);
   }
 
-  /* only allow scrolling on scrollable elements */
   button, .cat-btn, .np-btn, .add-btn, .bnav-btn, .mnav-btn, .del-btn {
     touch-action: manipulation;
   }
   .chip { touch-action: manipulation; }
 
-  /* prevent text selection on tap */
   .cat-btn, .np-btn, .add-btn, .chip, .tx-row, .bnav-btn {
     -webkit-user-select: none;
     user-select: none;
@@ -100,7 +96,8 @@
     padding-top: 0;
     padding-bottom: 100px;
   }
-  /* edit: fixed overlay so body never scrolls, preventing nav bar shift on keyboard */
+
+  /* edit overlay wrapper configuration */
   #s-edit.active {
     position: fixed;
     top: 0;
@@ -112,16 +109,18 @@
     margin: 0 auto;
     padding-top: env(safe-area-inset-top, 0px);
     background: var(--bg);
-    z-index: 150; /* Add this to ensure it covers the nav bar */
+    z-index: 150;
   }
+
   /* Hide bottom navigation bar completely when edit screen is open */
   body:has(#s-edit.active) .bnav {
     display: none !important;
   }
+
   body.pwa #s-edit.active {
     padding-top: env(safe-area-inset-top, 62px);
   }
-  /* transactions: fixed-position scroll container so sticky works */
+
   #s-transactions { display: none; }
   #s-transactions.active {
     display: block;
@@ -136,7 +135,7 @@
     max-width: 430px;
     margin: 0 auto;
   }
-  /* chips+search bar sticky at top of scroll container */
+
   .tx-sticky {
     position: sticky;
     top: 0;
@@ -144,18 +143,16 @@
     background: #0f0f1a;
     border-bottom: none;
     padding-bottom: 0px;
-    /* extend background behind Dynamic Island using box-shadow */
     box-shadow: 0 -100px 0 100px #0f0f1a;
   }
-  /* month headers sticky just below chips+search bar */
+
   .month-sticky {
     position: sticky;
-    top: 0; /* updated by JS to bar height */
+    top: 0; 
     z-index: 40;
     background: #0f0f1a;
     padding: 6px 18px 8px;
   }
-
 
   /* ── OVERVIEW ── */
   .total-card {
@@ -228,7 +225,6 @@
 
   .divider { margin: 0 18px; height: 0.5px; background: var(--border); }
 
-  /* pie + legend */
   .pie-wrap { display: flex; justify-content: center; padding: 20px 18px 16px; }
   .legend { padding: 0 18px 16px; display: flex; flex-direction: column; gap: 12px; }
   .leg-row { display: flex; justify-content: space-between; align-items: center; }
@@ -353,7 +349,6 @@
   .chg-down { color: #4cd97b; font-size: 10px; display: flex; align-items: center; gap: 2px; }
   .chg-flat { color: var(--muted); font-size: 10px; }
 
-  /* toast */
   .toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
     background: var(--accent); color: #fff;
@@ -362,6 +357,7 @@
     animation: fadeup 0.2s ease;
   }
   @keyframes fadeup { from { opacity:0; transform: translateX(-50%) translateY(8px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
   /* ── DATE RANGE SEARCH ── */
   .search-row { display: flex; gap: 8px; margin: 0 18px 0px; align-items: center; }
   .search-bar-inner { flex: 1; background: #1c1c28; border-radius: 12px; padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
@@ -430,7 +426,6 @@
 </head>
 <body>
 
-<!-- ══════════ OVERVIEW ══════════ -->
 <div class="screen active" id="s-overview">
   <div class="total-card">
     <div class="lbl">TOTAL SPENT THIS MONTH</div>
@@ -445,10 +440,10 @@
   <div class="cat-grid" id="cat-grid"></div>
 
   <div class="date-field" id="date-field" onclick="openCal()">
-  <div class="date-field-lbl"><i class="ti ti-calendar" style="font-size:14px;"></i>Date</div>
-  <div class="date-field-val" id="date-field-val">Today</div>
-</div>
-<input class="note-field" id="note-input" type="text" placeholder="Note (optional)" maxlength="60">
+    <div class="date-field-lbl"><i class="ti ti-calendar" style="font-size:14px;"></i>Date</div>
+    <div class="date-field-val" id="date-field-val">Today</div>
+  </div>
+  <input class="note-field" id="note-input" type="text" placeholder="Note (optional)" maxlength="60">
 
   <div class="numpad">
     <button class="np-btn" onclick="np('1')">1</button>
@@ -465,14 +460,13 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE1</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
   <div class="legend" id="ov-legend"></div>
 </div>
 
-<!-- ══════════ EDIT EXPENSE ══════════ -->
 <div class="screen" id="s-edit">
   <div style="padding:20px 18px 8px;display:flex;align-items:center;justify-content:space-between;">
     <button onclick="closeEdit()" style="background:#1c1c28;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:14px;display:flex;align-items:center;gap:6px;cursor:pointer;"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
@@ -500,7 +494,6 @@
   </div>
 </div>
 
-<!-- ══════════ TRANSACTIONS ══════════ -->
 <div class="screen" id="s-transactions">
   <div class="tx-sticky" id="tx-sticky-bar">
     <div id="sat-spacer" style="padding-top: 0px;"></div>
@@ -531,7 +524,6 @@
   <div id="tx-list"></div>
 </div>
 
-<!-- ══════════ REPORTS ══════════ -->
 <div class="screen" id="s-reports">
   <div style="padding-top:28px;"></div>
   <div class="month-nav">
@@ -549,14 +541,12 @@
   <div style="padding:8px 18px 20px;"><canvas id="rpt-line" width="100%" height="130"></canvas></div>
 </div>
 
-<!-- ══════════ BOTTOM NAV ══════════ -->
 <nav class="bnav">
   <button class="bnav-btn on" onclick="switchTab('overview',this)"><i class="ti ti-home"></i><span>Overview</span></button>
   <button class="bnav-btn" onclick="switchTab('transactions',this)"><i class="ti ti-list"></i><span>Transactions</span></button>
   <button class="bnav-btn" onclick="switchTab('reports',this)"><i class="ti ti-chart-bar"></i><span>Reports</span></button>
 </nav>
 
-<!-- ══════════ FIREBASE + APP LOGIC ══════════ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query }
@@ -597,7 +587,7 @@ let txFilter   = 'all';
 let txSearch   = '';
 let dateFrom   = null;
 let dateTo     = null;
-let datePickTarget = null; // 'from' or 'to'
+let datePickTarget = null;
 let editId     = null;
 let editAmtStr = '';
 let editCat    = null;
@@ -613,7 +603,6 @@ CATS.forEach(c => {
   const btn = document.createElement('button');
   btn.className = 'cat-btn';
   btn.dataset.id = c.id;
-  // show color dimmed by default
   btn.style.color = c.color;
   btn.style.opacity = '0.65';
   btn.style.background = c.color + '15';
@@ -637,7 +626,6 @@ CATS.forEach(c => {
 });
 
 // ── BUILD TX CHIPS ──
-// Search input
 const searchInput = document.getElementById('tx-search');
 searchInput.addEventListener('input', e => {
   txSearch = e.target.value.trim().toLowerCase();
@@ -651,9 +639,15 @@ const chipsEl = document.getElementById('tx-chips');
   chip.dataset.id = c.id;
   chip.style.background = c.id==='all' ? '#4848ee22' : `${c.color}22`;
   chip.style.color = c.id==='all' ? '#4848ee' : c.color;
-  if (c.id==='all') { chip.style.borderColor = '#4848ee'; }
+  if (c.id==='all') {
+    chip.style.borderColor = '#4848ee';
+  }
   chip.innerHTML = `<i class="ti ${c.icon}"></i>${c.label}`;
-  chip.onclick = () => { txFilter = c.id; renderTx(); updateChips(); };
+  chip.onclick = () => {
+    txFilter = c.id;
+    renderTx();
+    updateChips();
+  };
   chipsEl.appendChild(chip);
 });
 
@@ -674,7 +668,11 @@ window.np = (v) => {
   amtStr = amtStr.replace(/^0+/,'') || '';
   updateAmtDisplay();
 };
-window.npDel = () => { amtStr = amtStr.slice(0,-1); updateAmtDisplay(); };
+window.npDel = () => {
+  amtStr = amtStr.slice(0,-1);
+  updateAmtDisplay();
+};
+
 function updateAmtDisplay() {
   const n = parseInt(amtStr||'0',10);
   document.getElementById('amt-display').textContent = n.toLocaleString();
@@ -688,13 +686,11 @@ function selectCat(id) {
   document.querySelectorAll('.cat-btn').forEach(b => {
     const c = CAT_MAP[b.dataset.id];
     if (b.dataset.id === id) {
-      // fully lit when selected
       b.style.color = c.color;
       b.style.opacity = '1';
       b.style.background = c.color + '33';
       b.style.borderColor = c.color;
     } else {
-      // dimmed but still colored when not selected
       b.style.color = c.color;
       b.style.opacity = '0.65';
       b.style.background = c.color + '15';
@@ -738,33 +734,37 @@ function selectEditCat(id) {
 window.openEdit = (id) => {
   const exp = expenses.find(e => e.id === id);
   if (!exp) return;
-  editId     = id;
+  editId = id;
   editAmtStr = exp.amount.toString();
-  editCat    = exp.category;
+  editCat = exp.category;
   document.getElementById('edit-display').textContent = exp.amount.toLocaleString();
   document.getElementById('edit-note').value = exp.note || '';
-  // reset cat grid then select
+  
   document.querySelectorAll('#edit-cat-grid .cat-btn').forEach(b => {
     const c = CAT_MAP[b.dataset.id];
-    b.style.color = c.color;
-    b.style.opacity = '0.65';
-    b.style.background = c.color + '15';
-    b.style.borderColor = 'transparent';
+    if (b.dataset.id === exp.category) {
+      b.style.color = c.color; b.style.opacity = '1'; b.style.background = c.color+'33'; b.style.borderColor = c.color;
+    } else {
+      b.style.color = c.color; b.style.opacity = '0.65'; b.style.background = c.color+'15'; b.style.borderColor = 'transparent';
+    }
   });
-  selectEditCat(exp.category);
-  // switch to edit screen
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-edit').classList.add('active');
-  window.scrollTo(0,0);
 };
 
 window.closeEdit = () => {
   editId = null;
   
-  // Collapse the native keyboard cleanly if the note field is focused
+  // Collapse native keyboard layout safely if note field is active
   document.getElementById('edit-note').blur();
   
-  // Correctly closes the blur block, allowing the screen switch to execute properly
+  // Force reset navigation bar layout positioning back to baseline
+  const nav = document.querySelector('.bnav');
+  if (nav) {
+    nav.style.transform = 'translateX(-50%) translateY(0px)';
+  }
+  
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-transactions').classList.add('active');
   window.scrollTo(0,0);
@@ -774,6 +774,10 @@ window.saveEdit = async () => {
   const amt = parseInt(editAmtStr||'0',10);
   if (!amt)    { toast('Enter an amount'); return; }
   if (!editCat){ toast('Pick a category'); return; }
+  
+  // Collapse native software keyboard before exiting the screen overlay layer
+  document.getElementById('edit-note').blur();
+  
   const note = document.getElementById('edit-note').value.trim();
   try {
     await updateDoc(doc(db,'expenses',editId), { amount:amt, category:editCat, note });
@@ -782,610 +786,481 @@ window.saveEdit = async () => {
   } catch(e) { toast('Error saving'); console.error(e); }
 };
 
-// ── ADD EXPENSE ──
+// ── SNAPSHOT LISTENERS ──
+onSnapshot(query(collection(db,'expenses')), snap => {
+  expenses = [];
+  snap.forEach(d => {
+    const data = d.data();
+    let dt = null;
+    if (data.date) {
+      dt = data.date.toDate ? data.date.toDate() : new Date(data.date);
+    } else {
+      dt = new Date();
+    }
+    expenses.push({ id:d.id, ...data, date:dt });
+  });
+  expenses.sort((a,b) => b.date - a.date);
+  renderAll();
+});
+
+function renderAll() {
+  renderOverview();
+  renderTx();
+  renderRpt();
+}
+
+// ── OVERVIEW RENDER ──
+function renderOverview() {
+  const now = new Date();
+  const mExps = expenses.filter(e => e.date.getMonth()===now.getMonth() && e.date.getFullYear()===now.getFullYear());
+  const total = mExps.reduce((sum,e)=>sum+e.amount,0);
+  document.getElementById('ov-total').textContent = 'NT$' + total.toLocaleString();
+
+  const catsum = {};
+  CATS.forEach(c=>catsum[c.id]=0);
+  mExps.forEach(e=>{ if(catsum[e.category]!==undefined) catsum[e.category]+=e.amount; });
+
+  const data = []; const colors = []; const labels = [];
+  CATS.forEach(c=>{
+    if(catsum[c.id]>0){
+      data.push(catsum[c.id]); colors.push(c.color); labels.push(c.label);
+    }
+  });
+
+  if (ovPieChart) ovPieChart.destroy();
+  const ctx = document.getElementById('ov-pie').getContext('2d');
+  if (data.length === 0) {
+    ovPieChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: { datasets: [{ data: [1], backgroundColor: ['rgba(255,255,255,0.05)'], borderWidth: 0 }] },
+      options: { cutout: '78%', plugins: { datalabels: { display: false }, tooltip: { enabled: false } } }
+    });
+    document.getElementById('ov-legend').innerHTML = `<div class="empty-state">No expenses recorded this month</div>`;
+    return;
+  }
+
+  ovPieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+    options: {
+      cutout: '78%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+        datalabels: { display: false }
+      }
+    }
+  });
+
+  let legHtml = '';
+  const sorted = CATS.map(c=>({ ...c, amt:catsum[c.id] })).filter(x=>x.amt>0).sort((a,b)=>b.amt-a.amt);
+  sorted.forEach(c => {
+    const pct = ((c.amt/total)*100).toFixed(0) + '%';
+    legHtml += `
+      <div>
+        <div class="leg-row">
+          <div class="leg-left">
+            <div class="leg-dot" style="background:${c.color}"></div>
+            <span class="leg-name">${c.label}</span>
+          </div>
+          <div class="leg-right">
+            <span class="leg-pct">${pct}</span>
+            <span class="leg-amt">NT$${c.amt.toLocaleString()}</span>
+          </div>
+        </div>
+        <div class="cb-track"><div class="cb-fill" style="background:${c.color};width:${pct}"></div></div>
+      </div>`;
+  });
+  document.getElementById('ov-legend').innerHTML = legHtml;
+}
+
+// ── TRANSACTIONS RENDER ──
+let swipeStartX = 0;
+let swipeStartY = 0;
+let activeSwipeRow = null;
+let currentSwipeDir = null;
+
+function renderTx() {
+  const list = document.getElementById('tx-list');
+  let filtered = [...expenses];
+
+  if (txFilter !== 'all') {
+    filtered = filtered.filter(e => e.category === txFilter);
+  }
+  if (txSearch) {
+    filtered = filtered.filter(e => {
+      const nMatch = e.note && e.note.toLowerCase().includes(txSearch);
+      const aMatch = e.amount.toString().includes(txSearch);
+      return nMatch || aMatch;
+    });
+  }
+  if (dateFrom && dateTo) {
+    const f = new Date(dateFrom); f.setHours(0,0,0,0);
+    const t = new Date(dateTo); t.setHours(23,59,59,999);
+    filtered = filtered.filter(e => e.date >= f && e.date <= t);
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">No transactions match your filters</div>`;
+    return;
+  }
+
+  const groups = {};
+  filtered.forEach(e => {
+    const mStr = e.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    if (!groups[mStr]) groups[mStr] = { label: mStr, amt: 0, items: [] };
+    groups[mStr].amt += e.amount;
+    groups[mStr].items.push(e);
+  });
+
+  let html = '';
+  Object.values(groups).forEach(g => {
+    html += `
+      <div class="month-sticky">
+        <div class="month-hdr">
+          <span class="m-lbl">${g.label}</span>
+          <span class="m-amt">NT$${g.amt.toLocaleString()}</span>
+        </div>
+      </div>`;
+    g.items.forEach(e => {
+      const c = CAT_MAP[e.category] || { label: 'Others', icon: 'ti-dots-circle-horizontal', color: '#888' };
+      const dStr = e.date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+      html += `
+        <div class="swipe-wrap">
+          <button class="edit-action-btn" onclick="openEdit('${e.id}')"><i class="ti ti-edit"></i>Edit</button>
+          <div class="tx-row" data-id="${e.id}">
+            <div class="tx-ico" style="background:${c.color}15;color:${c.color};"><i class="ti ${c.icon}"></i></div>
+            <div class="tx-info">
+              <div class="tx-name">${c.label}</div>
+              <div class="tx-note">${e.note || ''}</div>
+            </div>
+            <div class="tx-right">
+              <div class="tx-amt">-NT$${e.amount.toLocaleString()}</div>
+              <div class="tx-date">${dStr}</div>
+            </div>
+          </div>
+          <button class="del-btn" onclick="deleteTx('${e.id}')"><i class="ti ti-trash"></i>Delete</button>
+        </div>`;
+    });
+  });
+  list.innerHTML = html;
+
+  // Touch handlers for swipe to actions
+  const rows = list.querySelectorAll('.tx-row');
+  rows.forEach(r => {
+    r.addEventListener('touchstart', e => {
+      if(r.classList.contains('highlight-lock')) return;
+      swipeStartX = e.touches[0].clientX;
+      swipeStartY = e.touches[0].clientY;
+      activeSwipeRow = r;
+      currentSwipeDir = null;
+    }, { passive: true });
+
+    r.addEventListener('touchmove', e => {
+      if (!activeSwipeRow || activeSwipeRow !== r) return;
+      const dx = e.touches[0].clientX - swipeStartX;
+      const dy = e.touches[0].clientY - swipeStartY;
+
+      if (!currentSwipeDir) {
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+          currentSwipeDir = dx > 0 ? 'right' : 'left';
+        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
+          activeSwipeRow = null;
+          return;
+        }
+      }
+
+      if (currentSwipeDir === 'left' && dx < 0) {
+        r.style.transform = `translateX(${Math.max(-72, dx)}px)`;
+      } else if (currentSwipeDir === 'right' && dx > 0) {
+        r.style.transform = `translateX(${Math.min(72, dx)}px)`;
+      }
+    }, { passive: true });
+
+    r.addEventListener('touchend', e => {
+      if (!activeSwipeRow || activeSwipeRow !== r) return;
+      const dx = e.changedTouches[0].clientX - swipeStartX;
+      r.style.transform = '';
+      if (currentSwipeDir === 'left' && dx < -35) {
+        r.classList.remove('swiped-right');
+        r.classList.add('swiped');
+      } else if (currentSwipeDir === 'right' && dx > 35) {
+        r.classList.remove('swiped');
+        r.classList.add('swiped-right');
+      } else {
+        r.classList.remove('swiped', 'swiped-right');
+      }
+      activeSwipeRow = null;
+    });
+  });
+}
+
+window.deleteTx = async (id) => {
+  if (!confirm('Delete this expense?')) return;
+  try {
+    await deleteDoc(doc(db, 'expenses', id));
+    toast('Deleted');
+  } catch(e) { toast('Error deleting'); console.error(e); }
+};
+
+// ── REPORTS RENDER ──
+function renderRpt() {
+  const mLabel = rptDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  document.getElementById('rpt-month-lbl').textContent = mLabel;
+
+  const curM = rptDate.getMonth(); const curY = rptDate.getFullYear();
+  const prevDate = new Date(curY, curM - 1, 1);
+  const prevM = prevDate.getMonth(); const prevY = prevDate.getFullYear();
+
+  const curExps = expenses.filter(e => e.date.getMonth()===curM && e.date.getFullYear()===curY);
+  const prevExps = expenses.filter(e => e.date.getMonth()===prevM && e.date.getFullYear()===prevY);
+
+  const curTotal = curExps.reduce((sum,e)=>sum+e.amount,0);
+  const prevTotal = prevExps.reduce((sum,e)=>sum+e.amount,0);
+
+  let diffHtml = '';
+  if (prevTotal === 0) {
+    diffHtml = `<span class="badge flat">Flat</span><span>No data for previous month</span>`;
+  } else {
+    const diffPct = ((curTotal - prevTotal) / prevTotal) * 100;
+    if (diffPct > 0) {
+      diffHtml = `<span class="badge up"><i class="ti ti-trending-up"></i>+${diffPct.toFixed(0)}%</span><span>More than last month</span>`;
+    } else if (diffPct < 0) {
+      diffHtml = `<span class="badge down"><i class="ti ti-trending-down"></i>${diffPct.toFixed(0)}%</span><span>Less than last month</span>`;
+    } else {
+      diffHtml = `<span class="badge flat">Flat</span><span>Same as last month</span>`;
+    }
+  }
+
+  document.getElementById('rpt-compare').innerHTML = `
+    <div class="compare-row">
+      <div class="compare-col">
+        <span class="c-lbl">LAST MONTH</span>
+        <span class="c-val" style="color:var(--muted)">NT$${prevTotal.toLocaleString()}</span>
+      </div>
+      <div class="compare-divider"></div>
+      <div class="compare-col right">
+        <span class="c-lbl">THIS MONTH</span>
+        <span class="c-val">NT$${curTotal.toLocaleString()}</span>
+      </div>
+    </div>
+    <div class="compare-footer">${diffHtml}</div>`;
+
+  const txCount = curExps.length;
+  const avg = txCount > 0 ? Math.round(curTotal / txCount) : 0;
+  
+  let highCat = 'None'; let highAmt = 0;
+  const catsum = {}; mCurExpenses(curExps, catsum);
+  Object.entries(catsum).forEach(([cid,amt])=>{
+    if(amt>highAmt){ highAmt=amt; highCat=CAT_MAP[cid]?.label||'Others'; }
+  });
+
+  document.getElementById('rpt-summary').innerHTML = `
+    <div class="sum-card"><div class="s-lbl">AVERAGE / EXPENSE</div><div class="s-val">NT$${avg.toLocaleString()}</div></div>
+    <div class="sum-card"><div class="s-lbl">TOP CATEGORY</div><div class="s-val" style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${highCat}</div></div>`;
+
+  let legHtml = '';
+  const sorted = CATS.map(c=>({ ...c, amt:catsum[c.id]||0 })).filter(x=>x.amt>0).sort((a,b)=>b.amt-a.amt);
+  sorted.forEach(c => {
+    const pct = ((c.amt/curTotal)*100).toFixed(0) + '%';
+    legHtml += `
+      <div>
+        <div class="leg-row">
+          <div class="leg-left">
+            <div class="leg-dot" style="background:${c.color}"></div>
+            <span class="leg-name">${c.label}</span>
+          </div>
+          <div class="leg-right">
+            <span class="leg-pct">${pct}</span>
+            <span class="leg-amt">NT$${c.amt.toLocaleString()}</span>
+          </div>
+        </div>
+        <div class="cb-track"><div class="cb-fill" style="background:${c.color};width:${pct}"></div></div>
+      </div>`;
+  });
+  document.getElementById('rpt-legend').innerHTML = legHtml || `<div class="empty-state">No data available</div>`;
+
+  // Trend Chart logic
+  const trendLabels = []; const trendData = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(curY, curM - i, 1);
+    trendLabels.push(d.toLocaleDateString('en-US', { month: 'short' }));
+    const mExps = expenses.filter(e => e.date.getMonth()===d.getMonth() && e.date.getFullYear()===d.getFullYear());
+    trendData.push(mExps.reduce((sum,e)=>sum+e.amount,0));
+  }
+
+  if (rptLineChart) rptLineChart.destroy();
+  const ctxLine = document.getElementById('rpt-line').getContext('2d');
+  rptLineChart = new Chart(ctxLine, {
+    type: 'line',
+    data: {
+      labels: trendLabels,
+      datasets: [{
+        data: trendData,
+        borderColor: '#4848ee',
+        borderWidth: 2,
+        pointBackgroundColor: '#4848ee',
+        pointRadius: 3,
+        tension: 0.1,
+        fill: false
+      }]
+    },
+    options: {
+      scales: { x: { grid: { display: false }, ticks: { color: '#7a7a9a', font: { size: 10 } } }, y: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+        datalabels: {
+          align: 'top',
+          color: '#fff',
+          font: { size: 9, weight: '500' },
+          formatter: (v) => v > 0 ? 'NT$' + Math.round(v).toLocaleString() : ''
+        }
+      }
+    }
+  });
+}
+
+function mCurExpenses(curExps, catsum) {
+  CATS.forEach(c=>catsum[c.id]=0);
+  curExps.forEach(e=>{ if(catsum[e.category]!==undefined) catsum[e.category]+=e.amount; });
+}
+
+window.rptChangeMonth = (dir) => {
+  rptDate.setMonth(rptDate.getMonth() + dir);
+  renderRpt();
+};
+
+// ── EXPENSE MUTATION ──
 window.addExpense = async () => {
   const amt = parseInt(amtStr||'0',10);
   if (!amt) { toast('Enter an amount'); return; }
   if (!selCat) { toast('Pick a category'); return; }
   const note = document.getElementById('note-input').value.trim();
 
-  // capture values then reset UI immediately before await
-  const payload = { amount: amt, category: selCat, note, dateMs: selectedDate.getTime() };
-  resetAddForm();
+  // Clear keyboard if input is active
+  if (document.activeElement) document.activeElement.blur();
 
   try {
-    await addDoc(collection(db,'expenses'), payload);
-    toast('Added!');
-  } catch(e) {
-    toast('Error — check connection');
-    console.error(e);
-  }
-};
-
-function resetAddForm() {
-  amtStr = '';
-  selCat = null;
-  document.getElementById('note-input').value = '';
-  document.getElementById('amt-display').textContent = '0';
-  document.getElementById('add-btn').classList.remove('ready');
-  document.querySelectorAll('.cat-btn').forEach(b => {
-    const c = CAT_MAP[b.dataset.id];
-    b.style.color = c.color;
-    b.style.opacity = '0.65';
-    b.style.background = c.color + '15';
-    b.style.borderColor = 'transparent';
-  });
-}
-
-// ── DELETE ──
-window.deleteExpense = async (id, el) => {
-  try {
-    await deleteDoc(doc(db,'expenses',id));
-  } catch(e) { toast('Error deleting'); }
-};
-
-// ── SWIPE TO DELETE (real touch) ──
-function closeAllSwipes(except) {
-  document.querySelectorAll('.tx-row.swiped, .tx-row.swiped-right').forEach(r => {
-    if (r !== except) { r.classList.remove('swiped','swiped-right'); r.style.transform = ''; }
-  });
-}
-
-function attachSwipe(el) {
-  let startX = 0, startY = 0, isDragging = false, currentX = 0;
-  const THRESHOLD = 50;
-  const ZONE = 72;
-
-  el.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    isDragging = false;
-    if (el.classList.contains('swiped'))       currentX = -ZONE;
-    else if (el.classList.contains('swiped-right')) currentX = ZONE;
-    else currentX = 0;
-    el.style.transition = 'none';
-  }, { passive: true });
-
-  el.addEventListener('touchmove', e => {
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
-    // require horizontal movement to be at least 2x the vertical movement
-    // and minimum 10px horizontal before triggering swipe
-    if (!isDragging && (Math.abs(dy) > Math.abs(dx) * 0.5 || Math.abs(dx) < 10)) return;
-    isDragging = true;
-    e.preventDefault();
-    const newX = Math.min(ZONE, Math.max(-ZONE, currentX + dx));
-    el.style.transform = 'translateX(' + newX + 'px)';
-  }, { passive: false });
-
-  el.addEventListener('touchend', e => {
-    el.style.transition = 'transform 0.25s ease';
-    if (!isDragging) {
-      closeAllSwipes(null);
-      el.style.transform = '';
-      return;
-    }
-    const dx = e.changedTouches[0].clientX - startX;
-    const total = currentX + dx;
-    if (total < -THRESHOLD) {
-      // snap left → delete
-      closeAllSwipes(el);
-      el.classList.remove('swiped-right');
-      el.classList.add('swiped');
-      el.style.transform = '';
-    } else if (total > THRESHOLD) {
-      // snap right → edit
-      closeAllSwipes(el);
-      el.classList.remove('swiped');
-      el.classList.add('swiped-right');
-      el.style.transform = '';
-    } else {
-      el.classList.remove('swiped','swiped-right');
-      el.style.transform = '';
-    }
-    isDragging = false;
-  }, { passive: true });
-}
-
-document.addEventListener('touchstart', e => {
-  if (!e.target.closest('.swipe-wrap')) closeAllSwipes(null);
-}, { passive: true });
-
-
-
-// ── REAL-TIME LISTENER ──
-const q = query(collection(db,'expenses'));
-onSnapshot(q, snap => {
-  expenses = snap.docs.map(d => {
-    const data = d.data();
-    const date = data.dateMs ? new Date(data.dateMs) : new Date();
-    return { id: d.id, ...data, date };
-  }).sort((a,b) => b.date - a.date);
-  renderOverview();
-  renderTx();
-  renderReports();
-});
-
-// ── OVERVIEW ──
-function renderOverview() {
-  const now = new Date();
-  const monthly = expenses.filter(e => e.date.getMonth()===now.getMonth() && e.date.getFullYear()===now.getFullYear());
-  const total = monthly.reduce((s,e)=>s+e.amount,0);
-  document.getElementById('ov-total').textContent = 'NT$'+total.toLocaleString();
-
-  const totals = {};
-  monthly.forEach(e => { totals[e.category] = (totals[e.category]||0) + e.amount; });
-
-  // pie
-  const cats = CATS.filter(c => totals[c.id]);
-  if (ovPieChart) ovPieChart.destroy();
-  if (cats.length) {
-    ovPieChart = new Chart(document.getElementById('ov-pie'),{
-      type:'pie',
-      data:{ labels: cats.map(c=>c.label), datasets:[{ data: cats.map(c=>totals[c.id]), backgroundColor: cats.map(c=>c.color), borderWidth:2, borderColor:'#0f0f1a', hoverOffset:0 }]},
-      options:{ responsive:false, events:[], plugins:{ legend:{display:false}, tooltip:{enabled:false}, datalabels:{ color:'#fff', font:{size:10,weight:'600'}, formatter:(v)=>Math.round(v/total*100)+'%', anchor:'center', align:'center', textStrokeColor:'rgba(0,0,0,0.6)', textStrokeWidth:3 }}}
+    await addDoc(collection(db, 'expenses'), {
+      amount: amt,
+      category: selCat,
+      note: note,
+      date: selectedDate
     });
-  }
-
-  // legend
-  const leg = document.getElementById('ov-legend');
-  if (!cats.length) { leg.innerHTML = '<div class="empty-state">No expenses this month yet.</div>'; return; }
-  leg.innerHTML = cats.sort((a,b)=>totals[b.id]-totals[a.id]).map(c => {
-    const pct = Math.round(totals[c.id]/total*100);
-    return `<div>
-      <div class="leg-row">
-        <div class="leg-left"><div class="leg-dot" style="background:${c.color}"></div><span class="leg-name">${c.label}</span></div>
-        <div class="leg-right"><span class="leg-pct">${pct}%</span><span class="leg-amt">NT$${totals[c.id].toLocaleString()}</span></div>
-      </div>
-      <div class="cb-track"><div class="cb-fill" style="width:${pct}%;background:${c.color}"></div></div>
-    </div>`;
-  }).join('');
-}
-
-// ── TRANSACTIONS ──
-function renderTx(highlightId) {
-  let filtered = txFilter==='all' ? expenses : expenses.filter(e=>e.category===txFilter);
-  if (txSearch) {
-    filtered = filtered.filter(e => {
-      const noteMatch = e.note && e.note.toLowerCase().includes(txSearch);
-      const amtMatch  = e.amount.toString().includes(txSearch);
-      return noteMatch || amtMatch;
-    });
-  }
-  if (dateFrom || dateTo) {
-    filtered = filtered.filter(e => {
-      const d = new Date(e.date); d.setHours(0,0,0,0);
-      if (dateFrom && d < dateFrom) return false;
-      if (dateTo && d > dateTo) return false;
-      return true;
-    });
-  }
-  const el = document.getElementById('tx-list');
-  if (!filtered.length) { el.innerHTML = '<div class="empty-state">No transactions yet.</div>'; return; }
-
-  const groups = {};
-  filtered.forEach(e => {
-    const d = e.date;
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const lbl = d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-    if (!groups[key]) groups[key] = { lbl, items:[], total:0 };
-    groups[key].items.push(e);
-    groups[key].total += e.amount;
-  });
-
-  el.innerHTML = Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(key => {
-    const g = groups[key];
-    const rows = g.items.map(e => {
-      const c = CAT_MAP[e.category]||{color:'#888',icon:'ti-receipt',label:'Others'};
-      const ds = e.date.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      return `<div class="swipe-wrap">
-        <button class="edit-action-btn" onclick="openEdit('${e.id}')"><i class="ti ti-pencil"></i>Edit</button>
-        <button class="del-btn" onclick="deleteExpense('${e.id}',this)"><i class="ti ti-trash"></i>Delete</button>
-        <div class="tx-row" data-id="${e.id}" >
-          <div class="tx-ico" style="background:${c.color}22"><i class="ti ${c.icon}" style="color:${c.color}"></i></div>
-          <div class="tx-info">
-            <div class="tx-name">${c.label}</div>
-            ${e.note ? `<div class="tx-note">${e.note}</div>` : ''}
-          </div>
-          <div class="tx-right">
-            <div class="tx-amt">-NT$${e.amount.toLocaleString()}</div>
-            <div class="tx-date">${ds}</div>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-    return `<div class="month-hdr month-sticky"><span class="m-lbl">${g.lbl}</span><span class="m-amt">NT$${g.total.toLocaleString()}</span></div>${rows}`;
-  }).join('');
-
-  // attach real touch swipe to every row
-  document.querySelectorAll('#tx-list .tx-row').forEach(attachSwipe);
-  // set month sticky top to height of chips+search bar
-  requestAnimationFrame(() => {
-    const bar = document.getElementById('tx-sticky-bar');
-    if (bar) {
-      const h = bar.offsetHeight;
-      document.querySelectorAll('.month-sticky').forEach(el => el.style.top = h + 'px');
-    }
-  });
-
-
-
-  // if a highlight target was requested, scroll and highlight
-  if (highlightId) {
-    setTimeout(() => {
-      const row = document.querySelector('.tx-row[data-id="' + highlightId + '"]');
-      if (!row) return;
-      const wrap = row.closest('.swipe-wrap');
-      if (!wrap) return;
-
-      // Step 1: remove the del-btn from DOM entirely so it cannot show
-      const delBtn = wrap.querySelector('.del-btn');
-      if (delBtn) delBtn.remove();
-      const editBtn = wrap.querySelector('.edit-action-btn');
-      if (editBtn) editBtn.remove();
-
-      // Step 2: force row to position 0 with no transition
-      row.classList.remove('swiped');
-      row.style.transition = 'none';
-      row.style.transform = 'translateX(0)';
-
-      // Step 3: scroll within transactions container
-      const txScreen = document.getElementById('s-transactions');
-      const bar2 = document.getElementById('tx-sticky-bar');
-      const barH2 = bar2 ? bar2.offsetHeight : 0;
-      const rowTop = row.offsetTop - barH2 - 20;
-      txScreen.scrollTo({ top: Math.max(0, rowTop), behavior: 'smooth' });
-
-      // Step 4: pulse highlight
-      setTimeout(() => {
-        row.style.transition = 'background 0.2s';
-        row.style.background = 'rgba(72,72,238,0.28)';
-        setTimeout(() => {
-          row.style.transition = 'background 0.8s';
-          row.style.background = '';
-          // Step 5: after highlight fades, re-render to restore delete button
-          setTimeout(() => renderTx(), 900);
-        }, 1200);
-      }, 400);
-    }, 300);
-  }
-}
-
-// ── REPORTS ──
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-window.rptChangeMonth = (d) => {
-  rptDate.setMonth(rptDate.getMonth()+d);
-  renderReports();
+    toast('Added successfully!');
+    amtStr = ''; selCat = null;
+    document.getElementById('note-input').value = '';
+    updateAmtDisplay();
+    selectCat(null);
+  } catch(e) { toast('Error saving'); console.error(e); }
 };
 
-function renderReports() {
-  const y = rptDate.getFullYear(), m = rptDate.getMonth();
-  document.getElementById('rpt-month-lbl').textContent = `${MONTHS[m]} ${y}`;
+// ── NAVIGATION INTERACTION ──
+window.switchTab = (tabId, btn) => {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + tabId).classList.add('active');
 
-  const thisMonth = expenses.filter(e => e.date.getFullYear()===y && e.date.getMonth()===m);
-  const prevDate  = new Date(y, m-1, 1);
-  const prevMonth = expenses.filter(e => e.date.getFullYear()===prevDate.getFullYear() && e.date.getMonth()===prevDate.getMonth());
-
-  const thisTotal = thisMonth.reduce((s,e)=>s+e.amount,0);
-  const prevTotal = prevMonth.reduce((s,e)=>s+e.amount,0);
-  const pctChange = prevTotal ? Math.round((thisTotal-prevTotal)/prevTotal*100) : null;
-
-  // A: compare card
-  const changeHtml = pctChange === null
-    ? `<span class="badge flat">No previous data</span>`
-    : pctChange > 0
-      ? `<div class="badge up"><i class="ti ti-arrow-up" style="font-size:10px;"></i>+${pctChange}%</div>`
-      : pctChange < 0
-        ? `<div class="badge down"><i class="ti ti-arrow-down" style="font-size:10px;"></i>${pctChange}%</div>`
-        : `<span class="badge flat">No change</span>`;
-
-  document.getElementById('rpt-compare').innerHTML = `
-    <div class="compare-row">
-      <div class="compare-col">
-        <span class="c-lbl">${MONTHS[prevDate.getMonth()]} ${prevDate.getFullYear()}</span>
-        <span class="c-val">NT$${prevTotal.toLocaleString()}</span>
-      </div>
-      <div class="compare-divider"></div>
-      <div class="compare-col right">
-        <span class="c-lbl">${MONTHS[m]} ${y}</span>
-        <span class="c-val">NT$${thisTotal.toLocaleString()}</span>
-      </div>
-    </div>
-    <div class="compare-footer">
-      <span style="font-size:12px;color:var(--muted);">Month-over-month</span>
-      ${changeHtml}
-    </div>`;
-
-  const largestExp = thisMonth.length ? thisMonth.reduce((a,b)=>a.amount>b.amount?a:b) : null;
-  const largest = largestExp ? largestExp.amount : 0;
-
-  // most spent category
-  const catTotals = {};
-  thisMonth.forEach(e => { catTotals[e.category] = (catTotals[e.category]||0) + e.amount; });
-  const topCatId = Object.keys(catTotals).sort((a,b)=>catTotals[b]-catTotals[a])[0];
-  const topCat = topCatId ? CAT_MAP[topCatId] : null;
-  const topCatAmt = topCatId ? catTotals[topCatId] : 0;
-
-  document.getElementById('rpt-summary').innerHTML = `
-    <div class="sum-card"><div class="s-lbl">Total spent</div><div class="s-val">NT$${thisTotal.toLocaleString()}</div></div>
-    <div class="sum-card"><div class="s-lbl">Transactions</div><div class="s-val">${thisMonth.length}</div></div>
-    <div class="sum-card">
-      <div class="s-lbl">Most spent category</div>
-      ${topCat
-        ? `<div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
-             <i class="ti ${topCat.icon}" style="color:${topCat.color};font-size:15px;" aria-hidden="true"></i>
-             <span style="font-size:13px;font-weight:500;color:#ccc;">${topCat.label}</span>
-             <span style="font-size:11px;color:#7a7a9a;">${thisTotal ? Math.round(topCatAmt/thisTotal*100) : 0}%</span>
-           </div>
-           <div class="s-val" style="margin-top:6px;">NT$${topCatAmt.toLocaleString()}</div>`
-        : '<div class="s-val">—</div>'}
-    </div>
-    <div class="sum-card" style="cursor:pointer;${largestExp?'border:1px solid rgba(255,255,255,0.12);':''}" onclick="${largestExp?`jumpToTransaction('${largestExp.id}')`:''}" title="${largestExp?'Tap to view transaction':''}">
-      <div class="s-lbl">Largest expense ${largestExp?'<i class="ti ti-arrow-right" style="font-size:10px;vertical-align:middle;opacity:0.5;"></i>':''}</div>
-      <div class="s-val">NT$${largest.toLocaleString()}</div>
-    </div>`;
-
-  // E: category breakdown with % change
-  const thisTotals = {}, prevTotals = {};
-  thisMonth.forEach(e => { thisTotals[e.category] = (thisTotals[e.category]||0)+e.amount; });
-  prevMonth.forEach(e => { prevTotals[e.category] = (prevTotals[e.category]||0)+e.amount; });
-
-  const legEl = document.getElementById('rpt-legend');
-  const activeCats = CATS.filter(c=>thisTotals[c.id]);
-  if (!activeCats.length) { legEl.innerHTML = '<div class="empty-state">No expenses this month.</div>'; }
-  else {
-    legEl.innerHTML = activeCats.sort((a,b)=>thisTotals[b.id]-thisTotals[a.id]).map(c => {
-      const pct = Math.round(thisTotals[c.id]/thisTotal*100);
-      const prev = prevTotals[c.id]||0;
-      let chgHtml = `<span class="chg-flat">—</span>`;
-      if (prev) {
-        const chg = Math.round((thisTotals[c.id]-prev)/prev*100);
-        chgHtml = chg > 0
-          ? `<span class="chg-up"><i class="ti ti-arrow-up" style="font-size:9px;"></i>+${chg}%</span>`
-          : chg < 0
-            ? `<span class="chg-down"><i class="ti ti-arrow-down" style="font-size:9px;"></i>${chg}%</span>`
-            : `<span class="chg-flat">—</span>`;
-      }
-      return `<div>
-        <div class="leg-row">
-          <div class="leg-left"><div class="leg-dot" style="background:${c.color}"></div><span class="leg-name">${c.label}</span></div>
-          <div class="leg-right">${chgHtml}<span style="font-size:11px;color:var(--muted);">${pct}%</span><span class="leg-amt">NT$${thisTotals[c.id].toLocaleString()}</span></div>
-        </div>
-        <div class="cb-track"><div class="cb-fill" style="width:${pct}%;background:${c.color}"></div></div>
-      </div>`;
-    }).join('');
-  }
-
-  // B: 6-month trend
-  const trendMonths = [], trendTotals = [];
-  for (let i=5; i>=0; i--) {
-    const d = new Date(y, m-i, 1);
-    const lbl = d.toLocaleDateString('en-US',{month:'short'});
-    const tot = expenses.filter(e=>e.date.getFullYear()===d.getFullYear()&&e.date.getMonth()===d.getMonth()).reduce((s,e)=>s+e.amount,0);
-    trendMonths.push(lbl);
-    trendTotals.push(tot);
-  }
-  if (rptLineChart) rptLineChart.destroy();
-  rptLineChart = new Chart(document.getElementById('rpt-line'),{
-    type:'line',
-    data:{
-      labels: trendMonths,
-      datasets:[{ data: trendTotals, borderColor:'#4848ee', backgroundColor:'rgba(72,72,238,0.12)', borderWidth:2, pointBackgroundColor:'#4848ee', pointRadius:4, fill:true, tension:0.4 }]
-    },
-    options:{
-      responsive:true,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` NT$${ctx.parsed.y.toLocaleString()}`}}, datalabels:{display:false} },
-      scales:{
-        x:{ ticks:{color:'#7a7a9a',font:{size:10}}, grid:{display:false} },
-        y:{ ticks:{color:'#7a7a9a',font:{size:9},callback:v=>'NT$'+v.toLocaleString()}, grid:{color:'rgba(255,255,255,0.05)'} }
-      }
-    }
-  });
-}
-
-// ── JUMP TO TRANSACTION ──
-window.jumpToTransaction = (id) => {
-  // switch to transactions tab
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('s-transactions').classList.add('active');
-  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.bnav-btn')[1].classList.add('on');
-  txFilter = 'all';
-  updateChips();
-  renderTx(id);
-};
-
-// ── TAB SWITCH ──
-window.switchTab = (id, btn) => {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('s-'+id).classList.add('active');
-  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
-  if (id === 'transactions') {
-    document.getElementById('s-transactions').scrollTop = 0;
-    // apply safe area padding only in PWA standalone mode
-    const isPWA = window.navigator.standalone === true;
-    const satSpacer = document.getElementById('sat-spacer');
-if (satSpacer) satSpacer.style.paddingTop = isPWA ? 'env(safe-area-inset-top, 62px)' : '0px';
-    // update month sticky tops after layout is painted
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const bar = document.getElementById('tx-sticky-bar');
-        if (bar) {
-          const h = bar.offsetHeight;
-          document.querySelectorAll('.month-sticky').forEach(el => el.style.top = h + 'px');
-        }
-      });
-    });
-  } else {
-    window.scrollTo(0,0);
-    txSearch = '';
-    const si = document.getElementById('tx-search');
-    if (si) si.value = '';
+
+  if (tabId === 'transactions') {
+    renderTx();
+    setTimeout(() => {
+      const topBar = document.getElementById('tx-sticky-bar');
+      const monthHeaders = document.querySelectorAll('.month-sticky');
+      if (topBar && monthHeaders.length > 0) {
+        const h = topBar.offsetHeight;
+        monthHeaders.forEach(hdr => hdr.style.top = (h - 1) + 'px');
+      }
+    }, 50);
   }
 };
 
-// touch-action:manipulation on buttons handles tap delay via CSS
-
-// ── PWA SAFE AREA FIX (standalone mode only) ──
-(function() {
-  if (!window.navigator.standalone) return;
-  // add .pwa class to body — all PWA-specific CSS uses this class
-  document.body.classList.add('pwa');
-  // measure actual safe area top in pixels
-  const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;top:env(safe-area-inset-top,0px);left:0;width:1px;height:1px;pointer-events:none;';
-  document.body.appendChild(div);
-  const sat = div.getBoundingClientRect().top;
-  document.body.removeChild(div);
-  window._sat = sat;
-
-  // fix nav bar shift when keyboard appears — iOS shifts the visual viewport
-  // upward when body is not scrollable, moving fixed elements above the keyboard.
-  // counteract by translating the nav down by the keyboard height.
-  if (window.visualViewport) {
-    const nav = document.querySelector('.bnav');
-    window.visualViewport.addEventListener('resize', () => {
-      if (!nav) return;
-      const keyboardHeight = window.innerHeight - window.visualViewport.height;
-      nav.style.transform = `translateX(-50%) translateY(${Math.max(0, keyboardHeight)}px)`;
-    });
-  }
-})();
-
-
-// ── DATE PICKER ──
-let calViewDate = new Date();
+// ── DATE SELECTOR CALENDAR SHEET ──
 let calTempDate = new Date();
-
-function formatDate(d) {
-  const today = new Date();
-  if (d.toDateString() === today.toDateString()) return 'Today';
-  return d.toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' });
-}
-
-function updateDateField() {
-  document.getElementById('date-field-val').textContent = formatDate(selectedDate);
-}
-
 window.openCal = () => {
-  calViewDate = new Date(selectedDate);
   calTempDate = new Date(selectedDate);
-  renderCal();
-  document.getElementById('cal-sheet').classList.add('visible');
-  document.getElementById('cal-backdrop').classList.add('visible');
   document.getElementById('date-field').classList.add('open');
+  document.getElementById('cal-backdrop').classList.add('visible');
+  document.getElementById('cal-sheet').classList.add('visible');
+  renderCalGrid();
 };
 
 window.closeCal = () => {
-  document.getElementById('cal-sheet').classList.remove('visible');
-  document.getElementById('cal-backdrop').classList.remove('visible');
   document.getElementById('date-field').classList.remove('open');
+  document.getElementById('cal-backdrop').classList.remove('visible');
+  document.getElementById('cal-sheet').classList.remove('visible');
 };
 
 window.calChangeMonth = (dir) => {
-  calViewDate.setMonth(calViewDate.getMonth() + dir);
-  if (datePickTarget === 'from' || datePickTarget === 'to') {
-    renderRangeCal();
-  } else {
-    renderCal();
-  }
+  calTempDate.setMonth(calTempDate.getMonth() + dir);
+  renderCalGrid();
 };
 
-window.confirmCal = () => {
-  if (datePickTarget === 'from' || datePickTarget === 'to') {
-    // date range picker
-    const d = new Date(calTempDate); d.setHours(0,0,0,0);
-    if (datePickTarget === 'from') {
-      dateFrom = d;
-      const el = document.getElementById('dr-from-val');
-      el.textContent = d.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
-      el.classList.remove('placeholder');
-      // auto set 'to' if not set or earlier than from
-      if (!dateTo || dateTo < dateFrom) {
-        dateTo = new Date(dateFrom);
-        const el2 = document.getElementById('dr-to-val');
-        el2.textContent = dateTo.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
-        el2.classList.remove('placeholder');
-      }
-    } else {
-      dateTo = d;
-      const el = document.getElementById('dr-to-val');
-      el.textContent = d.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
-      el.classList.remove('placeholder');
-      // auto set 'from' if not set or later than to
-      if (!dateFrom || dateFrom > dateTo) {
-        dateFrom = new Date(dateTo);
-        const el2 = document.getElementById('dr-from-val');
-        el2.textContent = dateFrom.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
-        el2.classList.remove('placeholder');
-      }
-    }
-    datePickTarget = null;
-    closeCal();
-    renderTx();
-  } else {
-    // add expense date picker
-    selectedDate = new Date(calTempDate);
-    updateDateField();
-    closeCal();
-  }
+window.selectCalDay = (y,m,d) => {
+  selectedDate = new Date(y,m,d);
+  const now = new Date();
+  const lbl = selectedDate.toDateString() === now.toDateString() ? 'Today' : selectedDate.toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' });
+  document.getElementById('date-field-val').textContent = lbl;
+  closeCal();
 };
 
-function renderCal() {
-  const y = calViewDate.getFullYear();
-  const m = calViewDate.getMonth();
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('cal-month-lbl').textContent = MONTHS[m] + ' ' + y;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const firstDay = new Date(y, m, 1).getDay();
-  const daysInMonth = new Date(y, m+1, 0).getDate();
+function renderCalGrid() {
+  const year = calTempDate.getFullYear(); const month = calTempDate.getMonth();
+  document.getElementById('cal-month-lbl').textContent = calTempDate.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const numDays = new Date(year, month + 1, 0).getDate();
+  const now = new Date(); now.setHours(0,0,0,0);
+
   let html = '';
-  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day"></div>';
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(y, m, d); date.setHours(0,0,0,0);
-    const isSel = date.toDateString() === calTempDate.toDateString();
-    const isToday = date.toDateString() === today.toDateString();
-    const isPast = date <= today;
-    let cls = 'cal-day';
-    if (isSel) cls += ' sel';
-    else if (isToday) cls += ' today';
-    else if (isPast) cls += ' past';
-    else cls += ' future';
-    const click = isPast ? 'onclick="selectCalDay(' + y + ',' + m + ',' + d + ')"' : '';
-    html += '<div class="' + cls + '" ' + click + '>' + d + '</div>';
+  for (let i = 0; i < firstDay; i++) { html += '<div></div>'; }
+  for (let d = 1; d <= numDays; d++) {
+    const cur = new Date(year, month, d);
+    let cls = 'cal-day past';
+    if (cur > now) cls = 'cal-day future';
+    else if (cur.getTime() === now.getTime()) cls = 'cal-day today';
+    
+    if (cur.toDateString() === selectedDate.toDateString()) cls += ' sel';
+
+    const click = cur <= now ? `onclick="selectCalDay(${year},${month},${d})"` : '';
+    html += `<div class="${cls}" ${click}>${d}</div>`;
   }
   document.getElementById('cal-days').innerHTML = html;
-  document.getElementById('cal-confirm').textContent = 'Confirm — ' + calTempDate.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
 }
 
-window.selectCalDay = (y, m, d) => {
-  calTempDate = new Date(y, m, d);
-  if (datePickTarget === 'from' || datePickTarget === 'to') {
-    renderRangeCal();
-  } else {
-    renderCal();
-  }
-};
-
-// ── DATE RANGE SEARCH ──
+// ── DATE RANGE PICKER (TRANSACTIONS VIEW) ──
 window.toggleDateRange = () => {
   const bar = document.getElementById('date-range-bar');
   const btn = document.getElementById('cal-icon-btn');
-  const isVisible = bar.classList.contains('visible');
-  if (isVisible) {
+  bar.classList.toggle('visible');
+  btn.classList.toggle('active');
+  
+  setTimeout(() => {
+    const topBar = document.getElementById('tx-sticky-bar');
+    const monthHeaders = document.querySelectorAll('.month-sticky');
+    if (topBar && monthHeaders.length > 0) {
+      const h = topBar.offsetHeight;
+      monthHeaders.forEach(hdr => hdr.style.top = (h - 1) + 'px');
+    }
+  }, 20);
+
+  if(!bar.classList.contains('visible')) {
     clearDateRange();
-  } else {
-    bar.classList.add('visible');
-    btn.classList.add('active');
   }
 };
 
+window.openDateRangePicker = (target) => {
+  datePickTarget = target;
+  calTempDate = target === 'from' ? (dateFrom ? new Date(dateFrom) : new Date()) : (dateTo ? new Date(dateTo) : new Date());
+  document.getElementById('cal-backdrop').classList.add('visible');
+  document.getElementById('cal-sheet').classList.add('visible');
+  renderRangeCalGrid();
+};
+
 window.clearDateRange = () => {
-  dateFrom = null;
-  dateTo = null;
-  document.getElementById('date-range-bar').classList.remove('visible');
-  document.getElementById('cal-icon-btn').classList.remove('active');
+  dateFrom = null; dateTo = null;
   document.getElementById('dr-from-val').textContent = 'Select date';
   document.getElementById('dr-from-val').classList.add('placeholder');
   document.getElementById('dr-to-val').textContent = 'Select date';
@@ -1393,46 +1268,90 @@ window.clearDateRange = () => {
   renderTx();
 };
 
-window.openDateRangePicker = (target) => {
-  datePickTarget = target;
-  const current = target === 'from' ? (dateFrom || new Date()) : (dateTo || new Date());
-  calViewDate = new Date(current);
-  calTempDate = new Date(current);
-  renderRangeCal();
-  document.getElementById('cal-sheet').classList.add('visible');
-  document.getElementById('cal-backdrop').classList.add('visible');
+window.selectRangeCalDay = (y,m,d) => {
+  const picked = new Date(y,m,d);
+  if (datePickTarget === 'from') {
+    dateFrom = picked;
+    const fLbl = picked.toLocaleDateString('en-US', { day:'numeric', month:'short' });
+    document.getElementById('dr-from-val').textContent = fLbl;
+    document.getElementById('dr-from-val').classList.remove('placeholder');
+    if (dateTo && dateTo < dateFrom) {
+      dateTo = null;
+      document.getElementById('dr-to-val').textContent = 'Select date';
+      document.getElementById('dr-to-val').classList.add('placeholder');
+    }
+  } else {
+    dateTo = picked;
+    const tLbl = picked.toLocaleDateString('en-US', { day:'numeric', month:'short' });
+    document.getElementById('dr-to-val').textContent = tLbl;
+    document.getElementById('dr-to-val').classList.remove('placeholder');
+    if (dateFrom && dateFrom > dateTo) {
+      dateFrom = null;
+      document.getElementById('dr-from-val').textContent = 'Select date';
+      document.getElementById('dr-from-val').classList.add('placeholder');
+    }
+  }
+  document.getElementById('cal-backdrop').classList.remove('visible');
+  document.getElementById('cal-sheet').classList.remove('visible');
+  renderTx();
 };
 
-function renderRangeCal() {
-  const y = calViewDate.getFullYear();
-  const m = calViewDate.getMonth();
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('cal-month-lbl').textContent = MONTHS[m] + ' ' + y;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const firstDay = new Date(y, m, 1).getDay();
-  const daysInMonth = new Date(y, m+1, 0).getDate();
+function renderRangeCalGrid() {
+  const year = calTempDate.getFullYear(); const month = calTempDate.getMonth();
+  document.getElementById('cal-month-lbl').textContent = calTempDate.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const numDays = new Date(year, month + 1, 0).getDate();
+  const now = new Date(); now.setHours(0,0,0,0);
+
   let html = '';
-  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day"></div>';
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(y, m, d); date.setHours(0,0,0,0);
-    const isSel = date.toDateString() === calTempDate.toDateString();
-    const isToday = date.toDateString() === today.toDateString();
-    const isPast = date <= today;
-    // highlight range
-    const inRange = dateFrom && dateTo && date >= dateFrom && date <= dateTo;
-    let cls = 'cal-day';
-    if (isSel) cls += ' sel';
-    else if (inRange) cls += ' in-range';
-    else if (isToday) cls += ' today';
-    else if (isPast) cls += ' past';
-    else cls += ' future';
-    const click = isPast ? 'onclick="selectCalDay(' + y + ',' + m + ',' + d + ')"' : '';
-    html += '<div class="' + cls + '" ' + click + '>' + d + '</div>';
+  for (let i = 0; i < firstDay; i++) { html += '<div></div>'; }
+  for (let d = 1; d <= numDays; d++) {
+    const cur = new Date(year, month, d);
+    let cls = 'cal-day past';
+    if (cur > now) cls = 'cal-day future';
+    else if (cur.getTime() === now.getTime()) cls = 'cal-day today';
+    
+    if (dateFrom && cur.toDateString() === dateFrom.toDateString()) cls += ' sel';
+    if (dateTo && cur.toDateString() === dateTo.toDateString()) cls += ' sel';
+    if (dateFrom && dateTo && cur > dateFrom && cur < dateTo) cls += ' in-range';
+
+    const click = cur <= now ? `onclick="selectRangeCalDay(${year},${month},${d})"` : '';
+    html += `<div class="${cls}" ${click}>${d}</div>`;
   }
   document.getElementById('cal-days').innerHTML = html;
-  const label = datePickTarget === 'from' ? 'Set From date' : 'Set To date';
-  document.getElementById('cal-confirm').textContent = label + ' — ' + calTempDate.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
 }
+
+// ── PWA STANDALONE INTERFACING ──
+if (window.navigator.standalone === true) {
+  document.body.classList.add('pwa');
+}
+
+// ── VISUAL VIEWPORT RESIZE MANAGEMENT ──
+if (window.visualViewport) {
+  const nav = document.querySelector('.bnav');
+  window.visualViewport.addEventListener('resize', () => {
+    if (!nav) return;
+    
+    // Skip calculation shifts if user is inside full screen edit workflow overlay layout.
+    if (document.getElementById('s-edit').classList.contains('active')) {
+      return;
+    }
+    
+    const keyboardHeight = window.innerHeight - window.visualViewport.height;
+    nav.style.transform = `translateX(-50%) translateY(${Math.max(0, keyboardHeight)}px)`;
+  });
+}
+
+// ── EXPOSE RE-DOCK LOGIC TO WINDOW GLOBALS ──
+window.openCal = openCal;
+window.closeCal = closeCal;
+window.calChangeMonth = calChangeMonth;
+window.selectCalDay = selectCalDay;
+window.toggleDateRange = toggleDateRange;
+window.openDateRangePicker = openDateRangePicker;
+window.clearDateRange = clearDateRange;
+window.selectRangeCalDay = selectRangeCalDay;
 
 // ── TOAST ──
 window.toast = (msg) => {
@@ -1442,6 +1361,7 @@ window.toast = (msg) => {
   setTimeout(()=>t.remove(), 1800);
 };
 </script>
+
 <div class="cal-backdrop" id="cal-backdrop" onclick="closeCal()"></div>
 <div class="cal-sheet" id="cal-sheet">
   <div class="cal-handle"></div>
@@ -1451,13 +1371,10 @@ window.toast = (msg) => {
     <button class="cal-nav-btn" onclick="calChangeMonth(1)"><i class="ti ti-chevron-right"></i></button>
   </div>
   <div class="cal-day-hdrs">
-    <div class="cal-day-hdr">S</div><div class="cal-day-hdr">M</div>
-    <div class="cal-day-hdr">T</div><div class="cal-day-hdr">W</div>
-    <div class="cal-day-hdr">T</div><div class="cal-day-hdr">F</div>
-    <div class="cal-day-hdr">S</div>
+    <div class="cal-day-hdr">S</div><div class="cal-day-hdr">M</div><div class="cal-day-hdr">T</div><div class="cal-day-hdr">W</div><div class="cal-day-hdr">T</div><div class="cal-day-hdr">F</div><div class="cal-day-hdr">S</div>
   </div>
   <div class="cal-days" id="cal-days"></div>
-  <button class="cal-confirm" id="cal-confirm" onclick="confirmCal()">Confirm</button>
 </div>
+
 </body>
 </html>
