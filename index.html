@@ -461,7 +461,8 @@
   .cal-day.today { color: var(--accent); font-weight: 600; cursor: pointer; }
   .cal-day.sel { background: var(--accent); color: #fff; font-weight: 600; border-radius: 50%; cursor: pointer; }
   .cal-day.future { color: #333; }
-  .cal-day.in-range { background: rgba(72,72,238,0.15); color: #ccc; border-radius: 4px; }
+  .cal-day.range-start, .cal-day.range-end { background: var(--accent); color: #fff; font-weight: 600; border-radius: 50%; cursor: pointer; }
+  .cal-day.in-range { background: rgba(72,72,238,0.35); color: #ddd; border-radius: 4px; cursor: pointer; }
   .cal-confirm { margin-top: 14px; background: var(--accent); border: none; border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 500; color: #fff; width: 100%; cursor: pointer; }
   .cal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; }
   .cal-backdrop.visible { display: block; }
@@ -688,8 +689,10 @@ let txFilter   = 'all';
 let txSearch   = '';
 let dateFrom   = null;
 let dateTo     = null;
-let datePickTarget    = null; // 'from' or 'to'
-let rangeAutoAdvance  = false;
+let datePickTarget = null;
+let calTempFrom    = null;
+let calTempTo      = null;
+let rangePickStep  = 'from';
 let editId     = null;
 let editExpr   = '';
 let selCurrency  = 'TWD';
@@ -1313,16 +1316,16 @@ function renderTx(highlightId) {
       const scrollTarget = rowOffset - barH2 - (visibleHeight / 2) + (row.offsetHeight / 2);
       txScreen.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
 
-      // Step 4: pulse highlight
+      // Step 4: outline flash
       setTimeout(() => {
-        row.style.transition = 'background 0.2s';
-        row.style.background = 'rgba(72,72,238,0.28)';
+        row.style.transition = 'box-shadow 0.15s';
+        row.style.boxShadow = 'inset 0 0 0 2px rgba(72,72,238,0.9)';
         setTimeout(() => {
-          row.style.transition = 'background 0.8s';
-          row.style.background = '';
-          // Step 5: after highlight fades, re-render to restore delete button
-          setTimeout(() => renderTx(), 900);
-        }, 1200);
+          row.style.transition = 'box-shadow 1s';
+          row.style.boxShadow = 'none';
+          // Step 5: after outline fades, re-render to restore delete button
+          setTimeout(() => { row.style.boxShadow = ''; row.style.transition = ''; renderTx(); }, 1100);
+        }, 1000);
       }, 400);
     }, 300);
   }
@@ -1551,18 +1554,12 @@ window.openCal = () => {
 window.closeCal = () => {
   document.getElementById('cal-sheet').classList.remove('visible');
   document.getElementById('cal-backdrop').classList.remove('visible');
-  if (datePickTarget) {
-    if (rangeAutoAdvance) {
-      dateFrom = null; dateTo = null; rangeAutoAdvance = false;
-      document.getElementById('cal-icon-btn').classList.remove('active');
-      document.getElementById('dr-from-val').textContent = 'Select date';
-      document.getElementById('dr-from-val').classList.add('placeholder');
-      document.getElementById('dr-to-val').textContent = 'Select date';
-      document.getElementById('dr-to-val').classList.add('placeholder');
-      document.getElementById('date-range-bar').classList.remove('visible');
-      renderTx();
-    }
+  if (datePickTarget === 'range') {
+    calTempFrom = null; calTempTo = null; rangePickStep = 'from';
     datePickTarget = null;
+    if (!dateFrom && !dateTo) {
+      document.getElementById('cal-icon-btn').classList.remove('active');
+    }
   } else {
     updateDateField();
   }
@@ -1570,7 +1567,7 @@ window.closeCal = () => {
 
 window.calChangeMonth = (dir) => {
   calViewDate.setMonth(calViewDate.getMonth() + dir);
-  if (datePickTarget === 'from' || datePickTarget === 'to') {
+  if (datePickTarget === 'range') {
     renderRangeCal();
   } else {
     renderCal();
@@ -1578,47 +1575,22 @@ window.calChangeMonth = (dir) => {
 };
 
 window.confirmCal = () => {
-  if (datePickTarget === 'from' || datePickTarget === 'to') {
-    const d = new Date(calTempDate); d.setHours(0,0,0,0);
-    const fmt = {day:'numeric',month:'short',year:'numeric'};
-    if (datePickTarget === 'from') {
-      dateFrom = d;
-      document.getElementById('dr-from-val').textContent = d.toLocaleDateString('en-US', fmt);
-      document.getElementById('dr-from-val').classList.remove('placeholder');
-      if (rangeAutoAdvance) {
-        // stay open, advance to 'to' step
-        dateTo = null;
-        document.getElementById('dr-to-val').textContent = 'Select date';
-        document.getElementById('dr-to-val').classList.add('placeholder');
-        datePickTarget = 'to';
-        calTempDate = new Date(dateFrom);
-        renderRangeCal();
-      } else {
-        if (!dateTo || dateTo < dateFrom) {
-          dateTo = new Date(dateFrom);
-          document.getElementById('dr-to-val').textContent = dateTo.toLocaleDateString('en-US', fmt);
-          document.getElementById('dr-to-val').classList.remove('placeholder');
-        }
-        datePickTarget = null;
-        closeCal();
-        renderTx();
-      }
-    } else {
-      dateTo = d;
-      if (dateTo < dateFrom) {
-        [dateFrom, dateTo] = [dateTo, dateFrom];
-        document.getElementById('dr-from-val').textContent = dateFrom.toLocaleDateString('en-US', fmt);
-        document.getElementById('dr-from-val').classList.remove('placeholder');
-      }
-      document.getElementById('dr-to-val').textContent = dateTo.toLocaleDateString('en-US', fmt);
-      document.getElementById('dr-to-val').classList.remove('placeholder');
-      document.getElementById('date-range-bar').classList.add('visible');
-      document.getElementById('cal-icon-btn').classList.add('active');
-      rangeAutoAdvance = false;
-      datePickTarget = null;
-      closeCal();
-      renderTx();
-    }
+  if (datePickTarget === 'range') {
+    if (!calTempFrom) { toast('Select a start date'); return; }
+    const fmt = {day:'numeric', month:'short', year:'numeric'};
+    dateFrom = calTempFrom;
+    dateTo   = calTempTo || new Date(calTempFrom);
+    document.getElementById('dr-from-val').textContent = dateFrom.toLocaleDateString('en-US', fmt);
+    document.getElementById('dr-from-val').classList.remove('placeholder');
+    document.getElementById('dr-to-val').textContent = dateTo.toLocaleDateString('en-US', fmt);
+    document.getElementById('dr-to-val').classList.remove('placeholder');
+    document.getElementById('date-range-bar').classList.add('visible');
+    document.getElementById('cal-icon-btn').classList.add('active');
+    calTempFrom = null; calTempTo = null; rangePickStep = 'from';
+    datePickTarget = null;
+    document.getElementById('cal-sheet').classList.remove('visible');
+    document.getElementById('cal-backdrop').classList.remove('visible');
+    renderTx();
   } else {
     selectedDate = new Date(calTempDate);
     updateDateField();
@@ -1654,10 +1626,18 @@ function renderCal() {
 }
 
 window.selectCalDay = (y, m, d) => {
-  calTempDate = new Date(y, m, d);
-  if (datePickTarget === 'from' || datePickTarget === 'to') {
+  if (datePickTarget === 'range') {
+    const clicked = new Date(y, m, d); clicked.setHours(0,0,0,0);
+    if (rangePickStep === 'from' || (calTempFrom && calTempTo)) {
+      calTempFrom = clicked; calTempTo = null; rangePickStep = 'to';
+    } else {
+      calTempTo = clicked;
+      if (calTempTo < calTempFrom) { [calTempFrom, calTempTo] = [calTempTo, calTempFrom]; }
+      rangePickStep = 'from';
+    }
     renderRangeCal();
   } else {
+    calTempDate = new Date(y, m, d);
     renderCal();
   }
 };
@@ -1667,11 +1647,10 @@ window.toggleDateRange = () => {
   if (dateFrom || dateTo) {
     clearDateRange();
   } else {
-    rangeAutoAdvance = true;
-    document.getElementById('cal-icon-btn').classList.add('active');
-    datePickTarget = 'from';
+    calTempFrom = null; calTempTo = null; rangePickStep = 'from';
+    datePickTarget = 'range';
     calViewDate = new Date();
-    calTempDate = new Date();
+    document.getElementById('cal-icon-btn').classList.add('active');
     renderRangeCal();
     document.getElementById('cal-sheet').classList.add('visible');
     document.getElementById('cal-backdrop').classList.add('visible');
@@ -1691,11 +1670,11 @@ window.clearDateRange = () => {
 };
 
 window.openDateRangePicker = (target) => {
-  rangeAutoAdvance = false;
-  datePickTarget = target;
-  const current = target === 'from' ? (dateFrom || new Date()) : (dateTo || new Date());
-  calViewDate = new Date(current);
-  calTempDate = new Date(current);
+  datePickTarget = 'range';
+  calTempFrom = dateFrom ? new Date(dateFrom) : null;
+  calTempTo   = dateTo   ? new Date(dateTo)   : null;
+  rangePickStep = 'from';
+  calViewDate = new Date(target === 'from' ? (dateFrom || new Date()) : (dateTo || new Date()));
   renderRangeCal();
   document.getElementById('cal-sheet').classList.add('visible');
   document.getElementById('cal-backdrop').classList.add('visible');
@@ -1713,23 +1692,31 @@ function renderRangeCal() {
   for (let i = 0; i < firstDay; i++) html += '<div class="cal-day"></div>';
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(y, m, d); date.setHours(0,0,0,0);
-    const isSel = date.toDateString() === calTempDate.toDateString();
-    const isToday = date.toDateString() === today.toDateString();
-    const isPast = date <= today;
-    // highlight range
-    const inRange = dateFrom && dateTo && date >= dateFrom && date <= dateTo;
+    const isStart  = calTempFrom && date.toDateString() === calTempFrom.toDateString();
+    const isEnd    = calTempTo   && date.toDateString() === calTempTo.toDateString();
+    const inRange  = calTempFrom && calTempTo && date > calTempFrom && date < calTempTo;
+    const isToday  = date.toDateString() === today.toDateString();
+    const isPast   = date <= today;
     let cls = 'cal-day';
-    if (isSel) cls += ' sel';
-    else if (inRange) cls += ' in-range';
-    else if (isToday) cls += ' today';
-    else if (isPast) cls += ' past';
-    else cls += ' future';
+    if (isStart || isEnd) cls += ' range-start';
+    else if (inRange)     cls += ' in-range';
+    else if (isToday)     cls += ' today';
+    else if (isPast)      cls += ' past';
+    else                  cls += ' future';
     const click = isPast ? 'onclick="selectCalDay(' + y + ',' + m + ',' + d + ')"' : '';
     html += '<div class="' + cls + '" ' + click + '>' + d + '</div>';
   }
   document.getElementById('cal-days').innerHTML = html;
-  const label = datePickTarget === 'from' ? 'Set From date' : 'Set To date';
-  document.getElementById('cal-confirm').textContent = label + ' — ' + calTempDate.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
+  const fmt = {month:'long', day:'numeric', year:'numeric'};
+  let label;
+  if (calTempFrom && calTempTo) {
+    label = calTempFrom.toLocaleDateString('en-US', fmt) + ' — ' + calTempTo.toLocaleDateString('en-US', fmt);
+  } else if (calTempFrom) {
+    label = 'Select end date';
+  } else {
+    label = 'Select start date';
+  }
+  document.getElementById('cal-confirm').textContent = label;
 }
 
 // ── CURRENCY PICKER ──
