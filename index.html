@@ -112,6 +112,11 @@
     margin: 0 auto;
     padding-top: env(safe-area-inset-top, 0px);
     background: var(--bg);
+    z-index: 150; /* Add this to ensure it covers the nav bar */
+  }
+  /* Hide bottom navigation bar completely when edit screen is open */
+  body:has(#s-edit.active) .bnav {
+    display: none !important;
   }
   body.pwa #s-edit.active {
     padding-top: env(safe-area-inset-top, 62px);
@@ -460,7 +465,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENS1E</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -755,6 +760,11 @@ window.openEdit = (id) => {
 
 window.closeEdit = () => {
   editId = null;
+  
+  // Collapse the native keyboard cleanly if the note field is focused
+  document.getElementById('edit-note').blur();
+  
+  // Correctly closes the blur block, allowing the screen switch to execute properly
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-transactions').classList.add('active');
   window.scrollTo(0,0);
