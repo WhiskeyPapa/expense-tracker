@@ -489,11 +489,14 @@
 
   <div class="cat-grid" id="cat-grid"></div>
 
-  <div class="date-field" id="date-field" onclick="openCal()">
-  <div class="date-field-lbl"><i class="ti ti-calendar" style="font-size:14px;"></i>Date</div>
-  <div class="date-field-val" id="date-field-val">Today</div>
-</div>
-<input class="note-field" id="note-input" type="text" placeholder="Note (optional)" maxlength="60">
+  <div class="search-row" style="margin:0 18px 10px;">
+    <div class="search-bar-inner">
+      <input id="note-input" type="text" placeholder="Note (optional)" maxlength="60" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <button class="cal-icon-btn" id="add-cal-btn" onclick="openCal()" aria-label="Select date">
+      <i class="ti ti-calendar" aria-hidden="true"></i>
+    </button>
+  </div>
 
   <div class="numpad">
     <button class="np-btn" onclick="np('1')">1</button>
@@ -528,8 +531,16 @@
     <span style="font-size:16px;font-weight:500;color:#fff;">Edit expense</span>
     <button onclick="saveEdit()" style="background:#4848ee;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;">Save</button>
   </div>
-  <div style="text-align:center;padding:12px 18px 10px;">
-    <span style="font-size:16px;color:#7a7a9a;">NT$ </span><span id="edit-display" style="font-size:40px;font-weight:500;color:#fff;letter-spacing:-1px;">0</span>
+  <div class="amount-display">
+    <div class="expr-display" id="edit-expr-display"></div>
+    <div class="amt-row">
+      <button class="cur-btn" onclick="openCurrencyPicker('edit')">
+        <span id="edit-cur-symbol">NT$</span>
+        <i class="ti ti-chevron-down" style="font-size:11px;opacity:0.5;"></i>
+      </button>
+      <span class="num" id="edit-display">0</span>
+    </div>
+    <div class="conv-display" id="edit-conv-display"></div>
   </div>
   <div class="cat-grid" id="edit-cat-grid"></div>
   <input class="note-field" id="edit-note" type="text" placeholder="Note (optional)" maxlength="60">
@@ -645,12 +656,24 @@ const CAT_MAP = Object.fromEntries(CATS.map(c=>[c.id,c]));
 const CURRENCIES = [
   { code:'TWD', symbol:'NT$', name:'Taiwan Dollar' },
   { code:'USD', symbol:'$',   name:'US Dollar' },
-  { code:'JPY', symbol:'¥',   name:'Japanese Yen' },
   { code:'EUR', symbol:'€',   name:'Euro' },
+  { code:'JPY', symbol:'¥',   name:'Japanese Yen' },
   { code:'GBP', symbol:'£',   name:'British Pound' },
-  { code:'HKD', symbol:'HK$', name:'Hong Kong Dollar' },
   { code:'CNY', symbol:'¥',   name:'Chinese Yuan' },
+  { code:'AUD', symbol:'A$',  name:'Australian Dollar' },
+  { code:'CAD', symbol:'C$',  name:'Canadian Dollar' },
+  { code:'CHF', symbol:'Fr',  name:'Swiss Franc' },
+  { code:'HKD', symbol:'HK$', name:'Hong Kong Dollar' },
+  { code:'SGD', symbol:'S$',  name:'Singapore Dollar' },
+  { code:'SEK', symbol:'kr',  name:'Swedish Krona' },
+  { code:'NOK', symbol:'kr',  name:'Norwegian Krone' },
+  { code:'NZD', symbol:'NZ$', name:'New Zealand Dollar' },
+  { code:'MXN', symbol:'$',   name:'Mexican Peso' },
+  { code:'INR', symbol:'₹',   name:'Indian Rupee' },
+  { code:'BRL', symbol:'R$',  name:'Brazilian Real' },
+  { code:'ZAR', symbol:'R',   name:'South African Rand' },
   { code:'KRW', symbol:'₩',   name:'South Korean Won' },
+  { code:'THB', symbol:'฿',   name:'Thai Baht' },
 ];
 const CUR_MAP = Object.fromEntries(CURRENCIES.map(c=>[c.code,c]));
 
@@ -669,6 +692,10 @@ let editExpr   = '';
 let selCurrency  = 'TWD';
 let currentRates = null;
 let rateCache    = {};
+let editCurrency     = 'TWD';
+let editCurrentRates = null;
+let editDateMs       = null;
+let curPickerTarget  = 'add';
 let editCat    = null;
 let rptDate    = new Date();
 rptDate.setDate(1);
@@ -854,12 +881,23 @@ function selectCat(id) {
 
 // ── EDIT NUMPAD ──
 function updateEditDisplay() {
-  document.getElementById('edit-display').textContent =
-    /[+\-]/.test(editExpr)
-      ? fmtExpr(editExpr.slice(0, editExpr.search(/[+\-][^+\-]*$/) + 1).replace(/[+\-]$/, ''))
-        + ' ' + editExpr.slice(editExpr.search(/[+\-][^+\-]*$/), editExpr.search(/[+\-][^+\-]*$/) + 1)
-        + ' ' + fmtNum(editExpr.slice(editExpr.search(/[+\-][^+\-]*$/) + 1) || '0')
-      : fmtNum(editExpr) || '0';
+  const exprEl = document.getElementById('edit-expr-display');
+  const numEl  = document.getElementById('edit-display');
+  const convEl = document.getElementById('edit-conv-display');
+  const val    = npEvaluate(editExpr);
+  const hasOp  = /[+\-×]/.test(editExpr);
+  if (exprEl) exprEl.textContent = hasOp ? fmtExpr(editExpr) : '';
+  numEl.textContent = val > 0 ? fmtNum(val.toString()) : (editExpr ? fmtNum(editExpr) : '0');
+  if (convEl) {
+    if (editCurrency !== 'TWD' && val > 0) {
+      if (editCurrentRates) {
+        convEl.textContent = '≈ NT$' + convertToTWD(val, editCurrency, editCurrentRates).toLocaleString();
+      } else {
+        convEl.textContent = 'Fetching rate…';
+        prefetchEditRates();
+      }
+    } else { convEl.textContent = ''; }
+  }
 }
 window.enp = (v) => {
   if (v === '.') {
@@ -905,10 +943,15 @@ function selectEditCat(id) {
 window.openEdit = (id) => {
   const exp = expenses.find(e => e.id === id);
   if (!exp) return;
-  editId   = id;
-  editExpr = exp.amount.toString();
-  editCat  = exp.category;
-  document.getElementById('edit-display').textContent = fmtNum(editExpr);
+  editId           = id;
+  editCurrency     = exp.originalCurrency || 'TWD';
+  editCurrentRates = null;
+  editDateMs       = exp.dateMs || Date.now();
+  editExpr         = (exp.originalAmount || exp.amount).toString();
+  editCat          = exp.category;
+  document.getElementById('edit-cur-symbol').textContent = CUR_MAP[editCurrency]?.symbol || 'NT$';
+  updateEditDisplay();
+  if (editCurrency !== 'TWD') prefetchEditRates();
   document.getElementById('edit-note').value = exp.note || '';
   // reset cat grid then select
   document.querySelectorAll('#edit-cat-grid .cat-btn').forEach(b => {
@@ -933,6 +976,9 @@ window.openEdit = (id) => {
 
 window.closeEdit = () => {
   editId = null;
+  editCurrency     = 'TWD';
+  editCurrentRates = null;
+  editDateMs       = null;
 
   // Collapse the native keyboard cleanly if the note field is focused
   document.getElementById('edit-note').blur();
@@ -958,8 +1004,23 @@ window.saveEdit = async () => {
   if (!amt)    { toast('Enter an amount'); return; }
   if (!editCat){ toast('Pick a category'); return; }
   const note = document.getElementById('edit-note').value.trim();
+  let twdAmount = amt;
+  const payload = { category: editCat, note };
+  if (editCurrency !== 'TWD') {
+    const rates = editCurrentRates || await getExchangeRates(editDateMs || Date.now());
+    if (!rates) { toast('Could not fetch exchange rate'); return; }
+    twdAmount = convertToTWD(amt, editCurrency, rates);
+    payload.originalAmount   = amt;
+    payload.originalCurrency = editCurrency;
+    payload.exchangeRate     = Math.round(rates['TWD'] / rates[editCurrency] * 10000) / 10000;
+  } else {
+    payload.originalAmount   = null;
+    payload.originalCurrency = null;
+    payload.exchangeRate     = null;
+  }
+  payload.amount = twdAmount;
   try {
-    await updateDoc(doc(db,'expenses',editId), { amount:amt, category:editCat, note });
+    await updateDoc(doc(db,'expenses',editId), payload);
     toast('Saved!');
     closeEdit();
   } catch(e) { toast('Error saving'); console.error(e); }
@@ -1464,7 +1525,10 @@ function formatDate(d) {
 }
 
 function updateDateField() {
-  document.getElementById('date-field-val').textContent = formatDate(selectedDate);
+  const today = new Date();
+  const isToday = selectedDate.toDateString() === today.toDateString();
+  const btn = document.getElementById('add-cal-btn');
+  if (btn) btn.classList.toggle('active', !isToday);
 }
 
 window.openCal = () => {
@@ -1473,13 +1537,14 @@ window.openCal = () => {
   renderCal();
   document.getElementById('cal-sheet').classList.add('visible');
   document.getElementById('cal-backdrop').classList.add('visible');
-  document.getElementById('date-field').classList.add('open');
+  const btn = document.getElementById('add-cal-btn');
+  if (btn) btn.classList.add('active');
 };
 
 window.closeCal = () => {
   document.getElementById('cal-sheet').classList.remove('visible');
   document.getElementById('cal-backdrop').classList.remove('visible');
-  document.getElementById('date-field').classList.remove('open');
+  updateDateField();
 };
 
 window.calChangeMonth = (dir) => {
@@ -1635,19 +1700,46 @@ function renderRangeCal() {
 
 // ── CURRENCY PICKER ──
 function renderCurList() {
-  document.getElementById('cur-list').innerHTML = CURRENCIES.map(c => `
-    <div class="cur-item" onclick="selectCurrency('${c.code}')">
+  const active = curPickerTarget === 'edit' ? editCurrency : selCurrency;
+
+  // Derive last-used foreign currency from most recent expense with originalCurrency
+  const lastForeign = [...expenses]
+    .sort((a, b) => (b.dateMs || 0) - (a.dateMs || 0))
+    .find(e => e.originalCurrency && e.originalCurrency !== 'TWD');
+  const lastUsed = lastForeign?.originalCurrency || null;
+
+  // Frequency count of foreign currencies across all expenses
+  const freq = {};
+  expenses.forEach(e => {
+    if (e.originalCurrency && e.originalCurrency !== 'TWD') {
+      freq[e.originalCurrency] = (freq[e.originalCurrency] || 0) + 1;
+    }
+  });
+
+  // Build ordered code list: TWD → last used → rest by frequency
+  const ordered = ['TWD'];
+  if (lastUsed) ordered.push(lastUsed);
+  CURRENCIES
+    .filter(c => c.code !== 'TWD' && c.code !== lastUsed)
+    .sort((a, b) => (freq[b.code] || 0) - (freq[a.code] || 0))
+    .forEach(c => ordered.push(c.code));
+
+  document.getElementById('cur-list').innerHTML = ordered.map(code => {
+    const c = CUR_MAP[code];
+    return `<div class="cur-item" onclick="selectCurrency('${c.code}')">
       <div class="cur-item-left">
         <span class="cur-code">${c.code}</span>
         <span class="cur-name">${c.name}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:13px;color:var(--muted);">${c.symbol}</span>
-        ${selCurrency===c.code ? '<i class="ti ti-check" style="color:var(--accent);font-size:16px;"></i>' : ''}
+        ${active===c.code ? '<i class="ti ti-check" style="color:var(--accent);font-size:16px;"></i>' : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
-window.openCurrencyPicker = () => {
+window.openCurrencyPicker = (target = 'add') => {
+  curPickerTarget = target;
   renderCurList();
   document.getElementById('cur-sheet').classList.add('visible');
   document.getElementById('cur-backdrop').classList.add('visible');
@@ -1657,13 +1749,22 @@ window.closeCurrencyPicker = () => {
   document.getElementById('cur-backdrop').classList.remove('visible');
 };
 window.selectCurrency = (code) => {
-  selCurrency = code;
-  currentRates = null;
-  document.getElementById('cur-symbol').textContent = CUR_MAP[code].symbol;
   closeCurrencyPicker();
-  if (code !== 'TWD') prefetchRates();
-  else { const el = document.getElementById('conv-display'); if (el) el.textContent = ''; }
-  updateAmtDisplay();
+  if (curPickerTarget === 'edit') {
+    editCurrency = code;
+    editCurrentRates = null;
+    document.getElementById('edit-cur-symbol').textContent = CUR_MAP[code].symbol;
+    if (code !== 'TWD') prefetchEditRates();
+    else { const el = document.getElementById('edit-conv-display'); if (el) el.textContent = ''; }
+    updateEditDisplay();
+  } else {
+    selCurrency = code;
+    currentRates = null;
+    document.getElementById('cur-symbol').textContent = CUR_MAP[code].symbol;
+    if (code !== 'TWD') prefetchRates();
+    else { const el = document.getElementById('conv-display'); if (el) el.textContent = ''; }
+    updateAmtDisplay();
+  }
 };
 
 // ── EXCHANGE RATES ──
@@ -1688,6 +1789,10 @@ function convertToTWD(amount, currency, rates) {
 async function prefetchRates() {
   const rates = await getExchangeRates(selectedDate.getTime());
   if (rates) { currentRates = rates; updateAmtDisplay(); }
+}
+async function prefetchEditRates() {
+  const rates = await getExchangeRates(editDateMs || Date.now());
+  if (rates) { editCurrentRates = rates; updateEditDisplay(); }
 }
 
 // ── TOAST ──
