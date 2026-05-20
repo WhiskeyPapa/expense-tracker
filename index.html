@@ -1260,6 +1260,16 @@ if (satSpacer) satSpacer.style.paddingTop = isPWA ? 'env(safe-area-inset-top, 62
 
 })();
 
+// ── VISUAL VIEWPORT FIX: keep nav anchored when keyboard appears ──
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const nav = document.querySelector('.bnav');
+    if (!nav) return;
+    const offset = window.innerHeight - window.visualViewport.height;
+    nav.style.transform = `translateY(-${offset}px)`;
+  });
+}
+
 
 // ── DATE PICKER ──
 let calViewDate = new Date();
