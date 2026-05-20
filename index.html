@@ -546,7 +546,15 @@
     <div class="conv-display" id="edit-conv-display"></div>
   </div>
   <div class="cat-grid" id="edit-cat-grid"></div>
-  <input class="note-field" id="edit-note" type="text" placeholder="Note (optional)" maxlength="60">
+  <div class="search-row" style="margin:0 18px 10px;">
+    <div class="search-bar-inner">
+      <input id="edit-note" type="text" placeholder="Note (optional)" maxlength="60" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <button class="cal-icon-btn active" id="edit-cal-btn" onclick="openCal('edit')" aria-label="Edit date" style="flex-direction:column;gap:2px;padding:7px 10px;min-width:48px;">
+      <i class="ti ti-calendar" aria-hidden="true"></i>
+      <span id="edit-date-lbl" style="font-size:9px;color:var(--muted);line-height:1;white-space:nowrap;"></span>
+    </button>
+  </div>
   <div class="numpad">
     <button class="np-btn" onclick="enp('1')">1</button>
     <button class="np-btn" onclick="enp('2')">2</button>
@@ -702,6 +710,7 @@ let editCurrency     = 'TWD';
 let editCurrentRates = null;
 let editDateMs       = null;
 let curPickerTarget  = 'add';
+let calTarget        = 'add';
 let editCat    = null;
 let rptDate    = new Date();
 rptDate.setDate(1);
@@ -957,6 +966,7 @@ window.openEdit = (id) => {
   editCat          = exp.category;
   document.getElementById('edit-cur-symbol').textContent = CUR_MAP[editCurrency]?.symbol || 'NT$';
   updateEditDisplay();
+  updateEditDateBtn();
   if (editCurrency !== 'TWD') prefetchEditRates();
   document.getElementById('edit-note').value = exp.note || '';
   // reset cat grid then select
@@ -1011,7 +1021,7 @@ window.saveEdit = async () => {
   if (!editCat){ toast('Pick a category'); return; }
   const note = document.getElementById('edit-note').value.trim();
   let twdAmount = amt;
-  const payload = { category: editCat, note };
+  const payload = { category: editCat, note, dateMs: editDateMs };
   if (editCurrency !== 'TWD') {
     const rates = editCurrentRates || await getExchangeRates(editDateMs || Date.now());
     if (!rates) { toast('Could not fetch exchange rate'); return; }
@@ -1540,15 +1550,23 @@ function updateDateField() {
   const btn = document.getElementById('add-cal-btn');
   if (btn) btn.classList.toggle('active', !isToday);
 }
+function updateEditDateBtn() {
+  const lbl = document.getElementById('edit-date-lbl');
+  if (lbl) lbl.textContent = new Date(editDateMs).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
 
-window.openCal = () => {
-  calViewDate = new Date(selectedDate);
-  calTempDate = new Date(selectedDate);
+window.openCal = (target = 'add') => {
+  calTarget = target;
+  const baseDate = target === 'edit' ? new Date(editDateMs || Date.now()) : new Date(selectedDate);
+  calViewDate = new Date(baseDate);
+  calTempDate = new Date(baseDate);
   renderCal();
   document.getElementById('cal-sheet').classList.add('visible');
   document.getElementById('cal-backdrop').classList.add('visible');
-  const btn = document.getElementById('add-cal-btn');
-  if (btn) btn.classList.add('active');
+  if (target === 'add') {
+    const btn = document.getElementById('add-cal-btn');
+    if (btn) btn.classList.add('active');
+  }
 };
 
 window.closeCal = () => {
@@ -1561,7 +1579,8 @@ window.closeCal = () => {
       document.getElementById('cal-icon-btn').classList.remove('active');
     }
   } else {
-    updateDateField();
+    if (calTarget === 'edit') updateEditDateBtn();
+    else updateDateField();
   }
 };
 
@@ -1592,8 +1611,15 @@ window.confirmCal = () => {
     document.getElementById('cal-backdrop').classList.remove('visible');
     renderTx();
   } else {
-    selectedDate = new Date(calTempDate);
-    updateDateField();
+    if (calTarget === 'edit') {
+      editDateMs = calTempDate.getTime();
+      editCurrentRates = null;
+      updateEditDateBtn();
+      if (editCurrency !== 'TWD') prefetchEditRates();
+    } else {
+      selectedDate = new Date(calTempDate);
+      updateDateField();
+    }
     closeCal();
   }
 };
