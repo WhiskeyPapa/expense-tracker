@@ -465,7 +465,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE1</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -685,7 +685,7 @@ function updateAmtDisplay() {
 // ── SELECT CATEGORY ──
 function selectCat(id) {
   selCat = id;
-  document.querySelectorAll('.cat-btn').forEach(b => {
+  document.querySelectorAll('#cat-grid .cat-btn').forEach(b => {
     const c = CAT_MAP[b.dataset.id];
     if (b.dataset.id === id) {
       // fully lit when selected
@@ -824,13 +824,15 @@ function resetAddForm() {
   document.getElementById('note-input').value = '';
   document.getElementById('amt-display').textContent = '0';
   document.getElementById('add-btn').classList.remove('ready');
-  document.querySelectorAll('.cat-btn').forEach(b => {
+  document.querySelectorAll('#cat-grid .cat-btn').forEach(b => {
     const c = CAT_MAP[b.dataset.id];
     b.style.color = c.color;
     b.style.opacity = '0.65';
     b.style.background = c.color + '15';
     b.style.borderColor = 'transparent';
   });
+  selectedDate = new Date();
+  updateDateField();
 }
 
 // ── DELETE ──
