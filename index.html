@@ -465,7 +465,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE1</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -761,23 +761,12 @@ window.openEdit = (id) => {
 window.closeEdit = () => {
   editId = null;
 
-  // Suppress the visual viewport listener and reset the nav transform BEFORE the
-  // screen switch so the nav appears at the correct position the instant it becomes
-  // visible (otherwise it inherits the keyboard-height translateY and flashes off-screen
-  // until the keyboard finishes its dismiss animation ~300ms later).
-  window._editClosing = true;
-  const _nav = document.querySelector('.bnav');
-  if (_nav) _nav.style.transform = 'translateX(-50%)';
-
   // Collapse the native keyboard cleanly if the note field is focused
   document.getElementById('edit-note').blur();
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-transactions').classList.add('active');
   window.scrollTo(0,0);
-
-  // Re-enable the listener after the keyboard dismiss animation finishes (~350 ms)
-  setTimeout(() => { window._editClosing = false; }, 400);
 };
 
 window.saveEdit = async () => {
@@ -1250,20 +1239,17 @@ if (satSpacer) satSpacer.style.paddingTop = isPWA ? 'env(safe-area-inset-top, 62
   document.body.removeChild(div);
   window._sat = sat;
 
-  // fix nav bar shift when keyboard appears — iOS shifts the visual viewport
-  // upward when body is not scrollable, moving fixed elements above the keyboard.
-  // counteract by translating the nav down by the keyboard height.
-  // _editClosing flag suppresses this during the edit→transactions transition so the
-  // nav doesn't flash off-screen while the keyboard is still animating away.
-  if (window.visualViewport) {
-    const nav = document.querySelector('.bnav');
-    window._editClosing = false;
-    window.visualViewport.addEventListener('resize', () => {
-      if (!nav || window._editClosing) return;
-      const keyboardHeight = window.innerHeight - window.visualViewport.height;
-      nav.style.transform = `translateX(-50%) translateY(${Math.max(0, keyboardHeight)}px)`;
-    });
-  }
+  // When the keyboard appears while the edit screen is open, iOS auto-scrolls
+  // window.scrollY upward to bring the focused input into view — even though the
+  // edit screen is a position:fixed overlay that doesn't need document scrolling.
+  // That scrollY shift displaces the visual viewport, making position:fixed elements
+  // (including the nav bar) appear higher on screen. Resetting scrollY to 0 immediately
+  // cancels this shift before it renders.
+  window.addEventListener('scroll', () => {
+    if (document.getElementById('s-edit').classList.contains('active')) {
+      window.scrollTo(0, 0);
+    }
+  }, { passive: true });
 })();
 
 
