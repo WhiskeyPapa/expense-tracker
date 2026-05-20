@@ -57,7 +57,9 @@
   body.pwa .bnav {
     padding-bottom: 34px;
   }
-
+  body.pwa #sat-spacer {
+    padding-top: env(safe-area-inset-top, 62px);
+  }
   /* only allow scrolling on scrollable elements */
   button, .cat-btn, .np-btn, .add-btn, .bnav-btn, .mnav-btn, .del-btn {
     touch-action: manipulation;
@@ -439,7 +441,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE1</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE2</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
