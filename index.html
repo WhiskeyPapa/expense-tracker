@@ -714,6 +714,7 @@ function selectEditCat(id) {
   });
 }
 
+let _editScrollLock = null;
 window.openEdit = (id) => {
   const exp = expenses.find(e => e.id === id);
   if (!exp) return;
@@ -735,9 +736,15 @@ window.openEdit = (id) => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-edit').classList.add('active');
   window.scrollTo(0,0);
+  _editScrollLock = () => window.scrollTo(0, 0);
+  window.addEventListener('scroll', _editScrollLock, { passive: true });
 };
 
 window.closeEdit = () => {
+  if (_editScrollLock) {
+    window.removeEventListener('scroll', _editScrollLock);
+    _editScrollLock = null;
+  }
   editId = null;
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-transactions').classList.add('active');
