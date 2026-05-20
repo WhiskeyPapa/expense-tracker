@@ -34,6 +34,17 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding-bottom: 100px;
+  }
+
   /* ── PWA STANDALONE SAFE AREA ── */
   /* applied via JS when window.navigator.standalone === true */
   /* ── PWA STANDALONE: applied via body.pwa class added by JS ── */
@@ -424,7 +435,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE1</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
