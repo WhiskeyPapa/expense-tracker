@@ -44,7 +44,6 @@
     overflow-x: hidden;
     padding-bottom: 100px;
   }
-  }
 
   /* ── PWA STANDALONE SAFE AREA ── */
   /* applied via JS when window.navigator.standalone === true */
@@ -822,7 +821,7 @@ function attachSwipe(el) {
     e.preventDefault();
     const newX = Math.min(ZONE, Math.max(-ZONE, currentX + dx));
     el.style.transform = 'translateX(' + newX + 'px)';
-  }, { passive: true });
+  }, { passive: false });
 
   el.addEventListener('touchend', e => {
     el.style.transition = 'transform 0.25s ease';
