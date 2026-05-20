@@ -465,7 +465,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE1</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -761,16 +761,10 @@ window.openEdit = (id) => {
 window.closeEdit = () => {
   editId = null;
   
-  // 1. Collapse the native keyboard cleanly if the note field is focused
+  // Collapse the native keyboard cleanly if the note field is focused
   document.getElementById('edit-note').blur();
   
-  // 2. Reset the navigation bar's position so it doesn't stay shifted upward
-  const nav = document.querySelector('.bnav');
-  if (nav) {
-    nav.style.transform = 'translateX(-50%) translateY(0px)';
-  }
-  
-  // 3. Switch screens
+  // Correctly closes the blur block, allowing the screen switch to execute properly
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-transactions').classList.add('active');
   window.scrollTo(0,0);
@@ -780,10 +774,6 @@ window.saveEdit = async () => {
   const amt = parseInt(editAmtStr||'0',10);
   if (!amt)    { toast('Enter an amount'); return; }
   if (!editCat){ toast('Pick a category'); return; }
-  
-  // Collapse the native keyboard immediately upon clicking Save
-  document.getElementById('edit-note').blur();
-  
   const note = document.getElementById('edit-note').value.trim();
   try {
     await updateDoc(doc(db,'expenses',editId), { amount:amt, category:editCat, note });
