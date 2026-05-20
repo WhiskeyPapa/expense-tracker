@@ -180,8 +180,38 @@
   .amount-display {
     text-align: center; padding: 10px 18px 10px;
   }
-  .amount-display .cur { font-size: 16px; color: var(--muted); }
   .amount-display .num { font-size: 40px; font-weight: 500; letter-spacing: -1px; }
+  .amt-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .cur-btn {
+    background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 3px;
+    color: var(--muted); font-size: 16px; padding: 4px 8px;
+    border-radius: 8px; touch-action: manipulation;
+    -webkit-user-select: none; user-select: none;
+  }
+  .cur-btn:active { background: rgba(255,255,255,0.07); }
+  .conv-display {
+    font-size: 13px; color: var(--muted); text-align: center;
+    min-height: 18px; margin-top: 4px;
+  }
+  .cur-sheet {
+    display: none; position: fixed;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: var(--bg2); border-radius: 20px 20px 0 0;
+    padding: 16px 0 32px; z-index: 200;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
+  }
+  .cur-sheet.visible { display: block; }
+  .cur-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 18px; cursor: pointer;
+    touch-action: manipulation; -webkit-user-select: none; user-select: none;
+  }
+  .cur-item:active { background: rgba(255,255,255,0.05); }
+  .cur-item-left { display: flex; align-items: center; gap: 12px; }
+  .cur-code { font-size: 14px; font-weight: 500; color: var(--text); }
+  .cur-name { font-size: 12px; color: var(--muted); }
 
   .cat-grid {
     display: grid; grid-template-columns: repeat(5,1fr);
@@ -218,13 +248,16 @@
   }
   .np-btn:active { background: #2a2a45; }
   .np-action { color: var(--muted); font-size: 15px; }
-  .np-confirm {
-    background: var(--accent); color: rgba(255,255,255,0.3);
-    font-size: 20px; border-radius: 10px;
-    border: none; cursor: pointer; transition: opacity 0.1s;
+  .add-btn {
+    margin: 0 18px 20px;
+    background: var(--bg2); border-radius: 14px;
+    padding: 15px; font-size: 15px; font-weight: 500;
+    color: rgba(255,255,255,0.6); text-align: center;
+    cursor: pointer; border: none; width: calc(100% - 36px);
+    transition: opacity 0.15s;
   }
-  .np-confirm.ready { color: #fff; }
-  .np-confirm:active { opacity: 0.7; }
+  .add-btn.ready { background: var(--accent); color: #fff; }
+  .add-btn:active { opacity: 0.8; }
   .expr-display {
     font-size: 13px; color: var(--muted); text-align: center;
     min-height: 18px; letter-spacing: 0.02em; padding: 0 18px;
@@ -444,7 +477,14 @@
   <div class="add-section-lbl">Add expense</div>
   <div class="amount-display">
     <div class="expr-display" id="expr-display"></div>
-    <span class="cur">NT$ </span><span class="num" id="amt-display">0</span>
+    <div class="amt-row">
+      <button class="cur-btn" onclick="openCurrencyPicker()">
+        <span id="cur-symbol">NT$</span>
+        <i class="ti ti-chevron-down" style="font-size:11px;opacity:0.5;"></i>
+      </button>
+      <span class="num" id="amt-display">0</span>
+    </div>
+    <div class="conv-display" id="conv-display"></div>
   </div>
 
   <div class="cat-grid" id="cat-grid"></div>
@@ -471,8 +511,10 @@
     <button class="np-btn" onclick="np('.')">.</button>
     <button class="np-btn" onclick="np('0')">0</button>
     <button class="np-btn np-action" onclick="npClear()">C</button>
-    <button class="np-confirm" id="add-btn" onclick="addExpense()"><i class="ti ti-check"></i></button>
+    <button class="np-btn np-action" onclick="npOperator('×')">×</button>
   </div>
+
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -507,7 +549,7 @@
     <button class="np-btn" onclick="enp('.')">.</button>
     <button class="np-btn" onclick="enp('0')">0</button>
     <button class="np-btn np-action" onclick="enpClear()">C</button>
-    <button class="np-confirm" onclick="saveEdit()"><i class="ti ti-check"></i></button>
+    <button class="np-btn np-action" onclick="enpOperator('×')">×</button>
   </div>
 </div>
 
@@ -599,6 +641,19 @@ const CATS = [
 ];
 const CAT_MAP = Object.fromEntries(CATS.map(c=>[c.id,c]));
 
+// ── CURRENCIES ──
+const CURRENCIES = [
+  { code:'TWD', symbol:'NT$', name:'Taiwan Dollar' },
+  { code:'USD', symbol:'$',   name:'US Dollar' },
+  { code:'JPY', symbol:'¥',   name:'Japanese Yen' },
+  { code:'EUR', symbol:'€',   name:'Euro' },
+  { code:'GBP', symbol:'£',   name:'British Pound' },
+  { code:'HKD', symbol:'HK$', name:'Hong Kong Dollar' },
+  { code:'CNY', symbol:'¥',   name:'Chinese Yuan' },
+  { code:'KRW', symbol:'₩',   name:'South Korean Won' },
+];
+const CUR_MAP = Object.fromEntries(CURRENCIES.map(c=>[c.code,c]));
+
 // ── STATE ──
 let expenses   = [];
 let amtExpr    = '';
@@ -611,6 +666,9 @@ let dateTo     = null;
 let datePickTarget = null; // 'from' or 'to'
 let editId     = null;
 let editExpr   = '';
+let selCurrency  = 'TWD';
+let currentRates = null;
+let rateCache    = {};
 let editCat    = null;
 let rptDate    = new Date();
 rptDate.setDate(1);
@@ -689,7 +747,7 @@ function fmtExpr(expr) {
   let result = '', num = '';
   for (let i = 0; i < expr.length; i++) {
     const ch = expr[i];
-    if (ch === '+' || ch === '-') {
+    if (ch === '+' || ch === '-' || ch === '×') {
       if (num) { result += fmtNum(num); num = ''; }
       result += ' ' + ch + ' ';
     } else { num += ch; }
@@ -698,38 +756,52 @@ function fmtExpr(expr) {
   return result || '0';
 }
 function npEvaluate(expr) {
-  const clean = (expr || '').replace(/[+\-.]+$/, '');
+  const clean = (expr || '').replace(/[+\-×.]+$/, '').trim();
   if (!clean) return 0;
-  let result = 0, num = '', op = '+';
-  for (let i = 0; i <= clean.length; i++) {
+  // Tokenize into numbers and operators
+  const tokens = [];
+  let num = '';
+  for (let i = 0; i < clean.length; i++) {
     const ch = clean[i];
-    if (i === clean.length || ch === '+' || ch === '-') {
-      result = op === '+' ? result + (parseFloat(num) || 0) : result - (parseFloat(num) || 0);
-      op = ch; num = '';
+    if (ch === '+' || ch === '-' || ch === '×') {
+      tokens.push(parseFloat(num) || 0); tokens.push(ch); num = '';
     } else { num += ch; }
   }
+  tokens.push(parseFloat(num) || 0);
+  // First pass: × (higher precedence)
+  const nums = [], ops = [];
+  let acc = tokens[0];
+  for (let i = 1; i < tokens.length; i += 2) {
+    const op = tokens[i], next = tokens[i + 1] || 0;
+    if (op === '×') { acc *= next; }
+    else { nums.push(acc); ops.push(op); acc = next; }
+  }
+  nums.push(acc);
+  // Second pass: + and −
+  let result = nums[0];
+  for (let j = 0; j < ops.length; j++)
+    result = ops[j] === '+' ? result + nums[j+1] : result - nums[j+1];
   return Math.round(result * 10000) / 10000;
 }
 
 // ── NUMPAD ──
 window.np = (v) => {
   if (v === '.') {
-    const segs = amtExpr.split(/[+\-]/);
+    const segs = amtExpr.split(/[+\-×]/);
     if (segs[segs.length - 1].includes('.')) return;
-    if (!amtExpr || /[+\-]$/.test(amtExpr)) amtExpr += '0';
+    if (!amtExpr || /[+\-×]$/.test(amtExpr)) amtExpr += '0';
     amtExpr += '.';
   } else {
     if (amtExpr.length >= 20) return;
     amtExpr += v;
-    amtExpr = amtExpr.replace(/(^|[+\-])0+(\d)/g, '$1$2');
+    amtExpr = amtExpr.replace(/(^|[+\-×])0+(\d)/g, '$1$2');
   }
   updateAmtDisplay();
 };
 window.npOperator = (op) => {
   if (!amtExpr) return;
-  if (/[+\-]$/.test(amtExpr)) { amtExpr = amtExpr.slice(0, -1) + op; }
+  if (/[+\-×]$/.test(amtExpr)) { amtExpr = amtExpr.slice(0, -1) + op; }
   else if (/\.$/.test(amtExpr)) { amtExpr += '0' + op; }
-  else if (/[+\-]/.test(amtExpr)) { amtExpr = npEvaluate(amtExpr).toString() + op; }
   else { amtExpr += op; }
   updateAmtDisplay();
 };
@@ -737,20 +809,23 @@ window.npDel = () => { amtExpr = amtExpr.slice(0, -1); updateAmtDisplay(); };
 window.npClear = () => { amtExpr = ''; updateAmtDisplay(); };
 
 function updateAmtDisplay() {
-  const hasOp = /[+\-]/.test(amtExpr);
   const exprEl = document.getElementById('expr-display');
   const numEl  = document.getElementById('amt-display');
-  if (hasOp) {
-    const lastOp = amtExpr.search(/[+\-][^+\-]*$/);
-    const context = amtExpr.slice(0, lastOp + 1);
-    const current = amtExpr.slice(lastOp + 1);
-    if (exprEl) exprEl.textContent = fmtExpr(context.replace(/[+\-]$/, '')) + ' ' + context.slice(-1);
-    numEl.textContent = current ? fmtNum(current) : '0';
-  } else {
-    if (exprEl) exprEl.textContent = '';
-    numEl.textContent = amtExpr ? fmtNum(amtExpr) : '0';
+  const convEl = document.getElementById('conv-display');
+  const val    = npEvaluate(amtExpr);
+  const hasOp  = /[+\-×]/.test(amtExpr);
+  if (exprEl) exprEl.textContent = hasOp ? fmtExpr(amtExpr) : '';
+  numEl.textContent = amtExpr ? fmtNum(val.toString()) : '0';
+  if (convEl) {
+    if (selCurrency !== 'TWD' && val > 0) {
+      if (currentRates) {
+        convEl.textContent = '≈ NT$' + convertToTWD(val, selCurrency, currentRates).toLocaleString();
+      } else {
+        convEl.textContent = 'Fetching rate…';
+        prefetchRates();
+      }
+    } else { convEl.textContent = ''; }
   }
-  const val = npEvaluate(amtExpr);
   const btn = document.getElementById('add-btn');
   if (btn) btn.classList.toggle('ready', val > 0 && selCat !== null);
 }
@@ -788,22 +863,21 @@ function updateEditDisplay() {
 }
 window.enp = (v) => {
   if (v === '.') {
-    const segs = editExpr.split(/[+\-]/);
+    const segs = editExpr.split(/[+\-×]/);
     if (segs[segs.length - 1].includes('.')) return;
-    if (!editExpr || /[+\-]$/.test(editExpr)) editExpr += '0';
+    if (!editExpr || /[+\-×]$/.test(editExpr)) editExpr += '0';
     editExpr += '.';
   } else {
     if (editExpr.length >= 20) return;
     editExpr += v;
-    editExpr = editExpr.replace(/(^|[+\-])0+(\d)/g, '$1$2');
+    editExpr = editExpr.replace(/(^|[+\-×])0+(\d)/g, '$1$2');
   }
   updateEditDisplay();
 };
 window.enpOperator = (op) => {
   if (!editExpr) return;
-  if (/[+\-]$/.test(editExpr)) { editExpr = editExpr.slice(0, -1) + op; }
+  if (/[+\-×]$/.test(editExpr)) { editExpr = editExpr.slice(0, -1) + op; }
   else if (/\.$/.test(editExpr)) { editExpr += '0' + op; }
-  else if (/[+\-]/.test(editExpr)) { editExpr = npEvaluate(editExpr).toString() + op; }
   else { editExpr += op; }
   updateEditDisplay();
 };
@@ -898,7 +972,17 @@ window.addExpense = async () => {
   if (!selCat) { toast('Pick a category'); return; }
   const note = document.getElementById('note-input').value.trim();
 
-  const payload = { amount: amt, category: selCat, note, dateMs: selectedDate.getTime() };
+  let twdAmount = amt;
+  const payload = { category: selCat, note, dateMs: selectedDate.getTime() };
+  if (selCurrency !== 'TWD') {
+    const rates = currentRates || await getExchangeRates(selectedDate.getTime());
+    if (!rates) { toast('Could not fetch exchange rate'); return; }
+    twdAmount = convertToTWD(amt, selCurrency, rates);
+    payload.originalAmount   = amt;
+    payload.originalCurrency = selCurrency;
+    payload.exchangeRate     = Math.round(rates['TWD'] / rates[selCurrency] * 10000) / 10000;
+  }
+  payload.amount = twdAmount;
   resetAddForm();
 
   try {
@@ -913,10 +997,15 @@ window.addExpense = async () => {
 function resetAddForm() {
   amtExpr = '';
   selCat = null;
+  selCurrency = 'TWD';
+  currentRates = null;
+  document.getElementById('cur-symbol').textContent = 'NT$';
   document.getElementById('note-input').value = '';
   document.getElementById('amt-display').textContent = '0';
   const exprEl = document.getElementById('expr-display');
   if (exprEl) exprEl.textContent = '';
+  const convEl = document.getElementById('conv-display');
+  if (convEl) convEl.textContent = '';
   document.getElementById('add-btn').classList.remove('ready');
   document.querySelectorAll('#cat-grid .cat-btn').forEach(b => {
     const c = CAT_MAP[b.dataset.id];
@@ -1097,7 +1186,11 @@ function renderTx(highlightId) {
           <div class="tx-ico" style="background:${c.color}22"><i class="ti ${c.icon}" style="color:${c.color}"></i></div>
           <div class="tx-info">
             <div class="tx-name">${c.label}</div>
-            ${e.note ? `<div class="tx-note">${e.note}</div>` : ''}
+            ${(() => {
+              const foreignSub = e.originalCurrency ? `${(e.originalAmount||0).toLocaleString()} ${e.originalCurrency}` : '';
+              const sub = e.note && foreignSub ? `${e.note} · ${foreignSub}` : (e.note || foreignSub);
+              return sub ? `<div class="tx-note">${sub}</div>` : '';
+            })()}
           </div>
           <div class="tx-right">
             <div class="tx-amt">-NT$${e.amount.toLocaleString()}</div>
@@ -1540,6 +1633,63 @@ function renderRangeCal() {
   document.getElementById('cal-confirm').textContent = label + ' — ' + calTempDate.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
 }
 
+// ── CURRENCY PICKER ──
+function renderCurList() {
+  document.getElementById('cur-list').innerHTML = CURRENCIES.map(c => `
+    <div class="cur-item" onclick="selectCurrency('${c.code}')">
+      <div class="cur-item-left">
+        <span class="cur-code">${c.code}</span>
+        <span class="cur-name">${c.name}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;color:var(--muted);">${c.symbol}</span>
+        ${selCurrency===c.code ? '<i class="ti ti-check" style="color:var(--accent);font-size:16px;"></i>' : ''}
+      </div>
+    </div>`).join('');
+}
+window.openCurrencyPicker = () => {
+  renderCurList();
+  document.getElementById('cur-sheet').classList.add('visible');
+  document.getElementById('cur-backdrop').classList.add('visible');
+};
+window.closeCurrencyPicker = () => {
+  document.getElementById('cur-sheet').classList.remove('visible');
+  document.getElementById('cur-backdrop').classList.remove('visible');
+};
+window.selectCurrency = (code) => {
+  selCurrency = code;
+  currentRates = null;
+  document.getElementById('cur-symbol').textContent = CUR_MAP[code].symbol;
+  closeCurrencyPicker();
+  if (code !== 'TWD') prefetchRates();
+  else { const el = document.getElementById('conv-display'); if (el) el.textContent = ''; }
+  updateAmtDisplay();
+};
+
+// ── EXCHANGE RATES ──
+async function getExchangeRates(dateMs) {
+  const d = new Date(dateMs);
+  const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  if (rateCache[key]) return rateCache[key];
+  const stored = localStorage.getItem('oxr_'+key);
+  if (stored) { rateCache[key] = JSON.parse(stored); return rateCache[key]; }
+  try {
+    const res = await fetch(`https://openexchangerates.org/api/historical/${key}.json?app_id=f8cdf508b94a46c0a31ef704bfb571fa`);
+    const data = await res.json();
+    rateCache[key] = data.rates;
+    localStorage.setItem('oxr_'+key, JSON.stringify(data.rates));
+    return data.rates;
+  } catch { return null; }
+}
+function convertToTWD(amount, currency, rates) {
+  if (currency === 'TWD' || !rates) return Math.round(amount);
+  return Math.round(amount * (rates['TWD'] || 1) / (rates[currency] || 1));
+}
+async function prefetchRates() {
+  const rates = await getExchangeRates(selectedDate.getTime());
+  if (rates) { currentRates = rates; updateAmtDisplay(); }
+}
+
 // ── TOAST ──
 window.toast = (msg) => {
   const t = document.createElement('div');
@@ -1553,6 +1703,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js');
 }
 </script>
+<div class="cal-backdrop" id="cur-backdrop" onclick="closeCurrencyPicker()"></div>
+<div class="cur-sheet" id="cur-sheet">
+  <div class="cal-handle"></div>
+  <div style="padding:0 18px 12px;font-size:15px;font-weight:500;color:var(--text);">Currency</div>
+  <div id="cur-list"></div>
+</div>
 <div class="cal-backdrop" id="cal-backdrop" onclick="closeCal()"></div>
 <div class="cal-sheet" id="cal-sheet">
   <div class="cal-handle"></div>
