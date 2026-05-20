@@ -496,8 +496,9 @@
     <div class="search-bar-inner">
       <input id="note-input" type="text" placeholder="Note (optional)" maxlength="60" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
-    <button class="cal-icon-btn" id="add-cal-btn" onclick="openCal()" aria-label="Select date">
+    <button class="cal-icon-btn" id="add-cal-btn" onclick="openCal()" aria-label="Select date" style="flex-direction:column;gap:2px;padding:7px 10px;min-width:48px;">
       <i class="ti ti-calendar" aria-hidden="true"></i>
+      <span id="add-date-lbl" style="font-size:9px;color:var(--muted);line-height:1;white-space:nowrap;">Today</span>
     </button>
   </div>
 
@@ -1549,6 +1550,8 @@ function updateDateField() {
   const isToday = selectedDate.toDateString() === today.toDateString();
   const btn = document.getElementById('add-cal-btn');
   if (btn) btn.classList.toggle('active', !isToday);
+  const lbl = document.getElementById('add-date-lbl');
+  if (lbl) lbl.textContent = isToday ? 'Today' : selectedDate.toLocaleDateString('en-US', {month:'short', day:'numeric'});
 }
 function updateEditDateBtn() {
   const lbl = document.getElementById('edit-date-lbl');
