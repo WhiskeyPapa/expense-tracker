@@ -752,6 +752,12 @@ window.openEdit = (id) => {
     b.style.borderColor = 'transparent';
   });
   selectEditCat(exp.category);
+  // Explicitly hide nav NOW via inline style — belt+suspenders alongside the CSS
+  // body:has(#s-edit.active) rule. Prevents nav from being visible in a shifted
+  // position if the keyboard scroll fires before the :has() rule is evaluated.
+  if (window._closeNavTimer) { clearTimeout(window._closeNavTimer); window._closeNavTimer = null; }
+  const _bnav = document.querySelector('.bnav');
+  if (_bnav) _bnav.style.display = 'none';
   // switch to edit screen
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-edit').classList.add('active');
@@ -766,7 +772,18 @@ window.closeEdit = () => {
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-transactions').classList.add('active');
-  window.scrollTo(0,0);
+  window.scrollTo(0, 0);
+
+  // Delay revealing the nav until after the keyboard dismiss animation (~250ms).
+  // In PWA standalone the viewport is still shrunk while the keyboard slides away —
+  // showing the nav immediately would place it at the wrong (shifted) position.
+  // After 350ms the keyboard is fully gone, the viewport is restored, and the nav
+  // appears correctly at the bottom.
+  window._closeNavTimer = setTimeout(() => {
+    const nav = document.querySelector('.bnav');
+    if (nav) nav.style.display = '';
+    window._closeNavTimer = null;
+  }, 350);
 };
 
 window.saveEdit = async () => {
@@ -1239,17 +1256,6 @@ if (satSpacer) satSpacer.style.paddingTop = isPWA ? 'env(safe-area-inset-top, 62
   document.body.removeChild(div);
   window._sat = sat;
 
-  // When the keyboard appears while the edit screen is open, iOS auto-scrolls
-  // window.scrollY upward to bring the focused input into view — even though the
-  // edit screen is a position:fixed overlay that doesn't need document scrolling.
-  // That scrollY shift displaces the visual viewport, making position:fixed elements
-  // (including the nav bar) appear higher on screen. Resetting scrollY to 0 immediately
-  // cancels this shift before it renders.
-  window.addEventListener('scroll', () => {
-    if (document.getElementById('s-edit').classList.contains('active')) {
-      window.scrollTo(0, 0);
-    }
-  }, { passive: true });
 })();
 
 
