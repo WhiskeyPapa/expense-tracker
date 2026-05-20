@@ -1180,7 +1180,7 @@ window.switchTab = (id, btn) => {
     // apply safe area padding only in PWA standalone mode
     const isPWA = window.navigator.standalone === true;
     const satSpacer = document.getElementById('sat-spacer');
-if (satSpacer) satSpacer.style.paddingTop = '0px';
+if (satSpacer) satSpacer.style.paddingTop = isPWA ? 'env(safe-area-inset-top, 62px)' : '0px';
     // update month sticky tops after layout is painted
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
