@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Expenses">
+<meta name="apple-mobile-web-app-title" content="Ledger">
 <title>Expenses</title>
+
+<meta name="theme-color" content="#0f0f1a">
+<link rel="manifest" href="manifest.json">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -204,7 +207,7 @@
   .note-field::placeholder { color: var(--muted); }
 
   .numpad {
-    display: grid; grid-template-columns: repeat(3,1fr);
+    display: grid; grid-template-columns: repeat(4,1fr);
     gap: 5px; padding: 0 18px 10px;
   }
   .np-btn {
@@ -214,17 +217,18 @@
     text-align: center; transition: background 0.1s;
   }
   .np-btn:active { background: #2a2a45; }
-
-  .add-btn {
-    margin: 0 18px 20px;
-    background: var(--bg2); border-radius: 14px;
-    padding: 15px; font-size: 15px; font-weight: 500;
-    color: rgba(255,255,255,0.6); text-align: center;
-    cursor: pointer; border: none; width: calc(100% - 36px);
-    transition: opacity 0.15s;
+  .np-action { color: var(--muted); font-size: 15px; }
+  .np-confirm {
+    background: var(--accent); color: rgba(255,255,255,0.3);
+    font-size: 20px; border-radius: 10px;
+    border: none; cursor: pointer; transition: opacity 0.1s;
   }
-  .add-btn.ready { background: var(--accent); color: #fff; }
-  .add-btn:active { opacity: 0.8; }
+  .np-confirm.ready { color: #fff; }
+  .np-confirm:active { opacity: 0.7; }
+  .expr-display {
+    font-size: 13px; color: var(--muted); text-align: center;
+    min-height: 18px; letter-spacing: 0.02em; padding: 0 18px;
+  }
 
   .divider { margin: 0 18px; height: 0.5px; background: var(--border); }
 
@@ -439,6 +443,7 @@
 
   <div class="add-section-lbl">Add expense</div>
   <div class="amount-display">
+    <div class="expr-display" id="expr-display"></div>
     <span class="cur">NT$ </span><span class="num" id="amt-display">0</span>
   </div>
 
@@ -454,18 +459,20 @@
     <button class="np-btn" onclick="np('1')">1</button>
     <button class="np-btn" onclick="np('2')">2</button>
     <button class="np-btn" onclick="np('3')">3</button>
+    <button class="np-btn np-action" onclick="npDel()"><i class="ti ti-backspace"></i></button>
     <button class="np-btn" onclick="np('4')">4</button>
     <button class="np-btn" onclick="np('5')">5</button>
     <button class="np-btn" onclick="np('6')">6</button>
+    <button class="np-btn np-action" onclick="npOperator('+')">+</button>
     <button class="np-btn" onclick="np('7')">7</button>
     <button class="np-btn" onclick="np('8')">8</button>
     <button class="np-btn" onclick="np('9')">9</button>
-    <button class="np-btn" onclick="np('00')">00</button>
+    <button class="np-btn np-action" onclick="npOperator('-')">−</button>
+    <button class="np-btn" onclick="np('.')">.</button>
     <button class="np-btn" onclick="np('0')">0</button>
-    <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
+    <button class="np-btn np-action" onclick="npClear()">C</button>
+    <button class="np-confirm" id="add-btn" onclick="addExpense()"><i class="ti ti-check"></i></button>
   </div>
-
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -488,15 +495,19 @@
     <button class="np-btn" onclick="enp('1')">1</button>
     <button class="np-btn" onclick="enp('2')">2</button>
     <button class="np-btn" onclick="enp('3')">3</button>
+    <button class="np-btn np-action" onclick="enpDel()"><i class="ti ti-backspace"></i></button>
     <button class="np-btn" onclick="enp('4')">4</button>
     <button class="np-btn" onclick="enp('5')">5</button>
     <button class="np-btn" onclick="enp('6')">6</button>
+    <button class="np-btn np-action" onclick="enpOperator('+')">+</button>
     <button class="np-btn" onclick="enp('7')">7</button>
     <button class="np-btn" onclick="enp('8')">8</button>
     <button class="np-btn" onclick="enp('9')">9</button>
-    <button class="np-btn" onclick="enp('00')">00</button>
+    <button class="np-btn np-action" onclick="enpOperator('-')">−</button>
+    <button class="np-btn" onclick="enp('.')">.</button>
     <button class="np-btn" onclick="enp('0')">0</button>
-    <button class="np-btn" onclick="enpDel()"><i class="ti ti-backspace"></i></button>
+    <button class="np-btn np-action" onclick="enpClear()">C</button>
+    <button class="np-confirm" onclick="saveEdit()"><i class="ti ti-check"></i></button>
   </div>
 </div>
 
@@ -590,7 +601,7 @@ const CAT_MAP = Object.fromEntries(CATS.map(c=>[c.id,c]));
 
 // ── STATE ──
 let expenses   = [];
-let amtStr     = '';
+let amtExpr    = '';
 let selectedDate = new Date();
 let selCat     = null;
 let txFilter   = 'all';
@@ -599,7 +610,7 @@ let dateFrom   = null;
 let dateTo     = null;
 let datePickTarget = null; // 'from' or 'to'
 let editId     = null;
-let editAmtStr = '';
+let editExpr   = '';
 let editCat    = null;
 let rptDate    = new Date();
 rptDate.setDate(1);
@@ -666,20 +677,82 @@ function updateChips() {
 }
 updateChips();
 
+// ── NUMPAD HELPERS ──
+function fmtNum(s) {
+  if (!s || s === '.') return s;
+  const parts = s.split('.');
+  parts[0] = (parseInt(parts[0]) || 0).toLocaleString();
+  return parts.join('.');
+}
+function fmtExpr(expr) {
+  if (!expr) return '0';
+  let result = '', num = '';
+  for (let i = 0; i < expr.length; i++) {
+    const ch = expr[i];
+    if (ch === '+' || ch === '-') {
+      if (num) { result += fmtNum(num); num = ''; }
+      result += ' ' + ch + ' ';
+    } else { num += ch; }
+  }
+  if (num) result += fmtNum(num);
+  return result || '0';
+}
+function npEvaluate(expr) {
+  const clean = (expr || '').replace(/[+\-.]+$/, '');
+  if (!clean) return 0;
+  let result = 0, num = '', op = '+';
+  for (let i = 0; i <= clean.length; i++) {
+    const ch = clean[i];
+    if (i === clean.length || ch === '+' || ch === '-') {
+      result = op === '+' ? result + (parseFloat(num) || 0) : result - (parseFloat(num) || 0);
+      op = ch; num = '';
+    } else { num += ch; }
+  }
+  return Math.round(result * 10000) / 10000;
+}
+
 // ── NUMPAD ──
 window.np = (v) => {
-  if (amtStr.length >= 7) return;
-  if (amtStr === '0') amtStr = '';
-  amtStr += v;
-  amtStr = amtStr.replace(/^0+/,'') || '';
+  if (v === '.') {
+    const segs = amtExpr.split(/[+\-]/);
+    if (segs[segs.length - 1].includes('.')) return;
+    if (!amtExpr || /[+\-]$/.test(amtExpr)) amtExpr += '0';
+    amtExpr += '.';
+  } else {
+    if (amtExpr.length >= 20) return;
+    amtExpr += v;
+    amtExpr = amtExpr.replace(/(^|[+\-])0+(\d)/g, '$1$2');
+  }
   updateAmtDisplay();
 };
-window.npDel = () => { amtStr = amtStr.slice(0,-1); updateAmtDisplay(); };
+window.npOperator = (op) => {
+  if (!amtExpr) return;
+  if (/[+\-]$/.test(amtExpr)) { amtExpr = amtExpr.slice(0, -1) + op; }
+  else if (/\.$/.test(amtExpr)) { amtExpr += '0' + op; }
+  else if (/[+\-]/.test(amtExpr)) { amtExpr = npEvaluate(amtExpr).toString() + op; }
+  else { amtExpr += op; }
+  updateAmtDisplay();
+};
+window.npDel = () => { amtExpr = amtExpr.slice(0, -1); updateAmtDisplay(); };
+window.npClear = () => { amtExpr = ''; updateAmtDisplay(); };
+
 function updateAmtDisplay() {
-  const n = parseInt(amtStr||'0',10);
-  document.getElementById('amt-display').textContent = n.toLocaleString();
+  const hasOp = /[+\-]/.test(amtExpr);
+  const exprEl = document.getElementById('expr-display');
+  const numEl  = document.getElementById('amt-display');
+  if (hasOp) {
+    const lastOp = amtExpr.search(/[+\-][^+\-]*$/);
+    const context = amtExpr.slice(0, lastOp + 1);
+    const current = amtExpr.slice(lastOp + 1);
+    if (exprEl) exprEl.textContent = fmtExpr(context.replace(/[+\-]$/, '')) + ' ' + context.slice(-1);
+    numEl.textContent = current ? fmtNum(current) : '0';
+  } else {
+    if (exprEl) exprEl.textContent = '';
+    numEl.textContent = amtExpr ? fmtNum(amtExpr) : '0';
+  }
+  const val = npEvaluate(amtExpr);
   const btn = document.getElementById('add-btn');
-  btn.classList.toggle('ready', n > 0 && selCat !== null);
+  if (btn) btn.classList.toggle('ready', val > 0 && selCat !== null);
 }
 
 // ── SELECT CATEGORY ──
@@ -705,17 +778,37 @@ function selectCat(id) {
 }
 
 // ── EDIT NUMPAD ──
+function updateEditDisplay() {
+  document.getElementById('edit-display').textContent =
+    /[+\-]/.test(editExpr)
+      ? fmtExpr(editExpr.slice(0, editExpr.search(/[+\-][^+\-]*$/) + 1).replace(/[+\-]$/, ''))
+        + ' ' + editExpr.slice(editExpr.search(/[+\-][^+\-]*$/), editExpr.search(/[+\-][^+\-]*$/) + 1)
+        + ' ' + fmtNum(editExpr.slice(editExpr.search(/[+\-][^+\-]*$/) + 1) || '0')
+      : fmtNum(editExpr) || '0';
+}
 window.enp = (v) => {
-  if (editAmtStr.length >= 7) return;
-  if (editAmtStr === '0') editAmtStr = '';
-  editAmtStr += v;
-  editAmtStr = editAmtStr.replace(/^0+/,'') || '';
-  document.getElementById('edit-display').textContent = parseInt(editAmtStr||'0',10).toLocaleString();
+  if (v === '.') {
+    const segs = editExpr.split(/[+\-]/);
+    if (segs[segs.length - 1].includes('.')) return;
+    if (!editExpr || /[+\-]$/.test(editExpr)) editExpr += '0';
+    editExpr += '.';
+  } else {
+    if (editExpr.length >= 20) return;
+    editExpr += v;
+    editExpr = editExpr.replace(/(^|[+\-])0+(\d)/g, '$1$2');
+  }
+  updateEditDisplay();
 };
-window.enpDel = () => {
-  editAmtStr = editAmtStr.slice(0,-1);
-  document.getElementById('edit-display').textContent = parseInt(editAmtStr||'0',10).toLocaleString();
+window.enpOperator = (op) => {
+  if (!editExpr) return;
+  if (/[+\-]$/.test(editExpr)) { editExpr = editExpr.slice(0, -1) + op; }
+  else if (/\.$/.test(editExpr)) { editExpr += '0' + op; }
+  else if (/[+\-]/.test(editExpr)) { editExpr = npEvaluate(editExpr).toString() + op; }
+  else { editExpr += op; }
+  updateEditDisplay();
 };
+window.enpDel = () => { editExpr = editExpr.slice(0, -1); updateEditDisplay(); };
+window.enpClear = () => { editExpr = ''; updateEditDisplay(); };
 
 function selectEditCat(id) {
   editCat = id;
@@ -738,10 +831,10 @@ function selectEditCat(id) {
 window.openEdit = (id) => {
   const exp = expenses.find(e => e.id === id);
   if (!exp) return;
-  editId     = id;
-  editAmtStr = exp.amount.toString();
-  editCat    = exp.category;
-  document.getElementById('edit-display').textContent = exp.amount.toLocaleString();
+  editId   = id;
+  editExpr = exp.amount.toString();
+  editCat  = exp.category;
+  document.getElementById('edit-display').textContent = fmtNum(editExpr);
   document.getElementById('edit-note').value = exp.note || '';
   // reset cat grid then select
   document.querySelectorAll('#edit-cat-grid .cat-btn').forEach(b => {
@@ -787,7 +880,7 @@ window.closeEdit = () => {
 };
 
 window.saveEdit = async () => {
-  const amt = parseInt(editAmtStr||'0',10);
+  const amt = npEvaluate(editExpr);
   if (!amt)    { toast('Enter an amount'); return; }
   if (!editCat){ toast('Pick a category'); return; }
   const note = document.getElementById('edit-note').value.trim();
@@ -800,12 +893,11 @@ window.saveEdit = async () => {
 
 // ── ADD EXPENSE ──
 window.addExpense = async () => {
-  const amt = parseInt(amtStr||'0',10);
+  const amt = npEvaluate(amtExpr);
   if (!amt) { toast('Enter an amount'); return; }
   if (!selCat) { toast('Pick a category'); return; }
   const note = document.getElementById('note-input').value.trim();
 
-  // capture values then reset UI immediately before await
   const payload = { amount: amt, category: selCat, note, dateMs: selectedDate.getTime() };
   resetAddForm();
 
@@ -819,10 +911,12 @@ window.addExpense = async () => {
 };
 
 function resetAddForm() {
-  amtStr = '';
+  amtExpr = '';
   selCat = null;
   document.getElementById('note-input').value = '';
   document.getElementById('amt-display').textContent = '0';
+  const exprEl = document.getElementById('expr-display');
+  if (exprEl) exprEl.textContent = '';
   document.getElementById('add-btn').classList.remove('ready');
   document.querySelectorAll('#cat-grid .cat-btn').forEach(b => {
     const c = CAT_MAP[b.dataset.id];
@@ -1051,8 +1145,12 @@ function renderTx(highlightId) {
       const txScreen = document.getElementById('s-transactions');
       const bar2 = document.getElementById('tx-sticky-bar');
       const barH2 = bar2 ? bar2.offsetHeight : 0;
-      const rowTop = row.offsetTop - barH2 - 20;
-      txScreen.scrollTo({ top: Math.max(0, rowTop), behavior: 'smooth' });
+      const rowRect = row.getBoundingClientRect();
+      const containerRect = txScreen.getBoundingClientRect();
+      const visibleHeight = txScreen.clientHeight - barH2;
+      const rowOffset = txScreen.scrollTop + rowRect.top - containerRect.top;
+      const scrollTarget = rowOffset - barH2 - (visibleHeight / 2) + (row.offsetHeight / 2);
+      txScreen.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
 
       // Step 4: pulse highlight
       setTimeout(() => {
@@ -1260,15 +1358,6 @@ if (satSpacer) satSpacer.style.paddingTop = isPWA ? 'env(safe-area-inset-top, 62
 
 })();
 
-// ── VISUAL VIEWPORT FIX: keep nav anchored when keyboard appears ──
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
-    const nav = document.querySelector('.bnav');
-    if (!nav) return;
-    const offset = window.innerHeight - window.visualViewport.height;
-    nav.style.transform = `translateY(-${offset}px)`;
-  });
-}
 
 
 // ── DATE PICKER ──
@@ -1458,6 +1547,11 @@ window.toast = (msg) => {
   document.body.appendChild(t);
   setTimeout(()=>t.remove(), 1800);
 };
+
+// ── SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
 </script>
 <div class="cal-backdrop" id="cal-backdrop" onclick="closeCal()"></div>
 <div class="cal-sheet" id="cal-sheet">
