@@ -119,7 +119,7 @@
     top: 0;
     z-index: 50;
     background: #0f0f1a;
-    border-bottom: 0.5px solid rgba(255,255,255,0.07);
+    border-bottom: none;
     padding-bottom: 0px;
     /* extend background behind Dynamic Island using box-shadow */
     box-shadow: 0 -100px 0 100px #0f0f1a;
@@ -335,11 +335,11 @@
   @keyframes fadeup { from { opacity:0; transform: translateX(-50%) translateY(8px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
   /* ── DATE RANGE SEARCH ── */
   .search-row { display: flex; gap: 8px; margin: 0 18px 0px; align-items: center; }
-  .search-bar-inner { flex: 1; background: #1c1c28; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+  .search-bar-inner { flex: 1; background: #1c1c28; border-radius: 12px; padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
   .search-bar-inner i { font-size: 16px; color: var(--muted); flex-shrink: 0; }
   .search-bar-inner input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; width: 100%; -webkit-appearance: none; }
   .search-bar-inner input::placeholder { color: var(--muted); }
-  .cal-icon-btn { background: #1c1c28; border: 1.5px solid transparent; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .cal-icon-btn { background: #1c1c28; border: 1.5px solid transparent; border-radius: 12px; padding: 8px 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
   .cal-icon-btn i { font-size: 18px; color: var(--muted); }
   .cal-icon-btn.active { border-color: var(--accent); }
   .cal-icon-btn.active i { color: var(--accent); }
@@ -476,7 +476,7 @@
   <div class="tx-sticky" id="tx-sticky-bar">
     <div id="sat-spacer" style="padding-top: 0px;"></div>
     <div class="chips" id="tx-chips"></div>
-    <div class="search-row">
+    <div class="search-row" style="margin-bottom:0;padding-bottom:0;">
       <div class="search-bar-inner">
         <i class="ti ti-search" aria-hidden="true"></i>
         <input id="tx-search" type="search" placeholder="Search by note or amount..." autocomplete="off" autocorrect="off" spellcheck="false">
