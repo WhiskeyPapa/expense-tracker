@@ -100,6 +100,22 @@
     padding-top: 0;
     padding-bottom: 100px;
   }
+  /* edit: fixed overlay so body never scrolls, preventing nav bar shift on keyboard */
+  #s-edit.active {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    max-width: 430px;
+    margin: 0 auto;
+    padding-top: env(safe-area-inset-top, 0px);
+    background: var(--bg);
+  }
+  body.pwa #s-edit.active {
+    padding-top: env(safe-area-inset-top, 62px);
+  }
   /* transactions: fixed-position scroll container so sticky works */
   #s-transactions { display: none; }
   #s-transactions.active {
@@ -444,7 +460,7 @@
     <button class="np-btn" onclick="npDel()"><i class="ti ti-backspace"></i></button>
   </div>
 
-  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE1</button>
+  <button class="add-btn" id="add-btn" onclick="addExpense()">ADD EXPENSE</button>
 
   <div class="divider"></div>
   <div class="pie-wrap"><canvas id="ov-pie" width="220" height="220"></canvas></div>
@@ -714,7 +730,6 @@ function selectEditCat(id) {
   });
 }
 
-let _editScrollLock = null;
 window.openEdit = (id) => {
   const exp = expenses.find(e => e.id === id);
   if (!exp) return;
@@ -736,15 +751,9 @@ window.openEdit = (id) => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-edit').classList.add('active');
   window.scrollTo(0,0);
-  _editScrollLock = () => window.scrollTo(0, 0);
-  window.addEventListener('scroll', _editScrollLock, { passive: true });
 };
 
 window.closeEdit = () => {
-  if (_editScrollLock) {
-    window.removeEventListener('scroll', _editScrollLock);
-    _editScrollLock = null;
-  }
   editId = null;
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-transactions').classList.add('active');
