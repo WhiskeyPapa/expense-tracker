@@ -760,14 +760,24 @@ window.openEdit = (id) => {
 
 window.closeEdit = () => {
   editId = null;
-  
+
+  // Suppress the visual viewport listener and reset the nav transform BEFORE the
+  // screen switch so the nav appears at the correct position the instant it becomes
+  // visible (otherwise it inherits the keyboard-height translateY and flashes off-screen
+  // until the keyboard finishes its dismiss animation ~300ms later).
+  window._editClosing = true;
+  const _nav = document.querySelector('.bnav');
+  if (_nav) _nav.style.transform = 'translateX(-50%)';
+
   // Collapse the native keyboard cleanly if the note field is focused
   document.getElementById('edit-note').blur();
-  
-  // Correctly closes the blur block, allowing the screen switch to execute properly
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-transactions').classList.add('active');
   window.scrollTo(0,0);
+
+  // Re-enable the listener after the keyboard dismiss animation finishes (~350 ms)
+  setTimeout(() => { window._editClosing = false; }, 400);
 };
 
 window.saveEdit = async () => {
@@ -1243,10 +1253,13 @@ if (satSpacer) satSpacer.style.paddingTop = isPWA ? 'env(safe-area-inset-top, 62
   // fix nav bar shift when keyboard appears — iOS shifts the visual viewport
   // upward when body is not scrollable, moving fixed elements above the keyboard.
   // counteract by translating the nav down by the keyboard height.
+  // _editClosing flag suppresses this during the edit→transactions transition so the
+  // nav doesn't flash off-screen while the keyboard is still animating away.
   if (window.visualViewport) {
     const nav = document.querySelector('.bnav');
+    window._editClosing = false;
     window.visualViewport.addEventListener('resize', () => {
-      if (!nav) return;
+      if (!nav || window._editClosing) return;
       const keyboardHeight = window.innerHeight - window.visualViewport.height;
       nav.style.transform = `translateX(-50%) translateY(${Math.max(0, keyboardHeight)}px)`;
     });
